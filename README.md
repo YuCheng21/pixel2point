@@ -12,8 +12,8 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 
 ## Dataset
 
-- Shapenet Point cloud (shapenetcorev2_hdf5_2048.zip): [antao97/PointCloudDatasets](https://github.com/antao97/PointCloudDatasets)
-- Shapenet renderer (image.tar): [Xharlie/ShapenetRender_more_variation](https://github.com/Xharlie/ShapenetRender_more_variation)
+- Shapenet Point cloud (shapenetcorev2_hdf5_2048.zip, 0.98G): [antao97/PointCloudDatasets](https://github.com/antao97/PointCloudDatasets)
+- Shapenet renderer (image.tar, 30G): [Xharlie/ShapenetRender_more_variation](https://github.com/Xharlie/ShapenetRender_more_variation)
 
 > Need to modify the dataset path in the `train.py` and `test.py`
 
@@ -30,5 +30,6 @@ After starting the training, the output results are in `./outputs/train`
 ```bash
 python test.py
 ```
+> Need to modify the model path in `test.py`
 
 The test result is in `./outputs/test`
