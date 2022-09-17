@@ -2,7 +2,7 @@ A Pytorch implementation of the paper: Pixel2point: 3D Object Reconstruction Fro
 Sphere
 
 - A. J. Afifi, J. Magnusson, T. A. Soomro, and O. Hellwich,
-  “[Pixel2point: 3D Object Reconstruction From a Single Image Using CNN and Initial Sphere,](https://ieeexplore.ieee.org/document/9305196/citations#citations)
+  “[Pixel2point: 3D Object Reconstruction From a Single Image Using CNN and Initial Sphere,](https://ieeexplore.ieee.org/document/9305196)
   ” IEEE Access, vol. 9, pp. 110–121, 2021, doi: 10.1109/ACCESS.2020.3046951.
 
 |                            Input 2D Image                            |                       Ground Truth Point Cloud                       |                          Output Point Cloud                          |
@@ -27,7 +27,7 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 - Shapenet renderer (image.tar,
   30G): [Xharlie/ShapenetRender_more_variation](https://github.com/Xharlie/ShapenetRender_more_variation)
 
-> Need to modify the dataset path in the `settings.py`
+> required to modify the dataset path in the `settings.py`
 
 ## Training
 
@@ -43,7 +43,7 @@ After starting the training, the output results are in `./outputs/train`
 python test.py
 ```
 
-> Need to modify the model path in `settings.py`
+> required to modify the model path in `settings.py`
 
 The test result is in `./outputs/test`
 
