@@ -13,19 +13,17 @@ from logger import logger, console_logger, file_logger
 from dataloader import ShapenetDataset
 from model import Pixel2Point
 from utils import show_3d, show_img
-
-train_dataset_path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/train_files.txt"
-snapshot_path = r"/root/pixel2point/dataset/image"
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-logger.debug('==================================')
-logger.debug(f"Using {device} device")
-logger.debug('==================================')
-
+from settings import Training
 
 if __name__ == '__main__':
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.debug('==================================')
+    logger.debug(f"Using {device} device")
+    logger.debug('==================================')
+
     console_logger()
     file_logger()
+    settings = Training()
 
     hyper_param_batch = 32  # 32
     hyper_param_epoch = 10
@@ -39,14 +37,17 @@ if __name__ == '__main__':
         # transforms.Normalize(0.5, 0.5)
     ])
     train_dataset = ShapenetDataset(
-        dataset_path=train_dataset_path,
-        snapshot_path=snapshot_path,
+        dataset_path=settings.train_dataset_path,
+        snapshot_path=settings.snapshot_path,
         transforms=transforms_train,
-        only=['chair'],
-        mode='easy'
+        only=settings.only,
+        mode=settings.mode
     )
     train_loader = DataLoader(train_dataset, batch_size=hyper_param_batch, shuffle=True)
     logger.debug('==================================')
+    logger.debug(f'Dataset only: {train_dataset.only}')
+    logger.debug(f'Dataset mode: {train_dataset.mode}')
+    logger.debug(f'Dataset transforms: {train_dataset.transforms}')
     logger.debug('DataLoader OK')
     pixel2point = Pixel2Point().to(device)
     optimizer = torch.optim.Adam(pixel2point.parameters(), lr=hyper_param_learning_rate)
@@ -101,4 +102,4 @@ if __name__ == '__main__':
     with open(outputs_path.joinpath('info.txt'), 'w') as f:
         f.write(f'only: {train_dataset.only}\n')
         f.write(f'mode: {train_dataset.mode}\n')
-        f.write(f'transforms: {transforms_train}\n')
+        f.write(f'transforms: {train_dataset.transforms}\n')

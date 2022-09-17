@@ -12,20 +12,17 @@ from logger import logger, console_logger, file_logger
 from dataloader import ShapenetDataset
 from model import Pixel2Point
 from utils import show_3d, show_img
-
-test_dataset_path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/test_files.txt"
-snapshot_path = r"/root/pixel2point/dataset/image"
-model_path = r"/root/pixel2point/model/2022-09-15_11-32-03_param.pt"
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-logger.debug('==================================')
-logger.debug(f"Using {device} device")
-logger.debug('==================================')
-
+from settings import Testing
 
 if __name__ == '__main__':
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.debug('==================================')
+    logger.debug(f"Using {device} device")
+    logger.debug('==================================')
+
     console_logger()
     file_logger()
+    settings = Testing()
 
     hyper_param_batch = 32  # 32
 
@@ -36,17 +33,20 @@ if __name__ == '__main__':
     ])
 
     test_dataset = ShapenetDataset(
-        dataset_path=test_dataset_path,
-        snapshot_path=snapshot_path,
+        dataset_path=settings.test_dataset_path,
+        snapshot_path=settings.snapshot_path,
         transforms=transforms_test,
-        only=['chair'],
-        mode='easy'
+        only=settings.only,
+        mode=settings.mode
     )
     test_loader = DataLoader(test_dataset, batch_size=hyper_param_batch, shuffle=True)
     logger.debug('==================================')
+    logger.debug(f'Dataset only: {test_dataset.only}')
+    logger.debug(f'Dataset mode: {test_dataset.mode}')
+    logger.debug(f'Dataset transforms: {test_dataset.transforms}')
     logger.debug('DataLoader OK')
     pixel2point = Pixel2Point().to(device)
-    checkpoint = torch.load(model_path)
+    checkpoint = torch.load(settings.model_path)
     pixel2point.load_state_dict(checkpoint['model_state_dict'])
     logger.debug(summary(pixel2point))
     logger.debug('Model OK')
@@ -81,5 +81,8 @@ if __name__ == '__main__':
 
     logger.info(f'Loss {np.mean(losses)}')
     with open(outputs_path.joinpath('info.txt'), 'w') as f:
-        f.write(f'model path: {model_path}\n')
+        f.write(f'model path: {settings.model_path}\n')
         f.write(f'mean loss: {np.mean(losses)}\n')
+        f.write(f'only: {test_dataset.only}\n')
+        f.write(f'mode: {test_dataset.mode}\n')
+        f.write(f'transforms: {test_dataset.transforms}\n')

@@ -97,7 +97,9 @@ dependencies:
     - fvcore==0.1.5
     - iopath==0.1.10
     - pandas==1.4.4
+    - pydantic==1.10.2
     - python-dateutil==2.8.2
+    - python-dotenv==0.21.0
     - pytz==2022.2.1
     - torchinfo==1.7.0
 prefix: /opt/conda/envs/pixel2point

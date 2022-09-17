@@ -4,3 +4,4 @@ dataset
 logs
 model
 outputs
+.env

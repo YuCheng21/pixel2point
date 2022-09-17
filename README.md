@@ -27,7 +27,7 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 - Shapenet renderer (image.tar,
   30G): [Xharlie/ShapenetRender_more_variation](https://github.com/Xharlie/ShapenetRender_more_variation)
 
-> Need to modify the dataset path in the `train.py` and `test.py`
+> Need to modify the dataset path in the `settings.py`
 
 ## Training
 
@@ -43,7 +43,7 @@ After starting the training, the output results are in `./outputs/train`
 python test.py
 ```
 
-> Need to modify the model path in `test.py`
+> Need to modify the model path in `settings.py`
 
 The test result is in `./outputs/test`
 
