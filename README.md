@@ -41,7 +41,7 @@ python test.py
 The test result is in `./outputs/test`
 
 ## Notes
-
-- Loss Function: Not implemented Earth Mover's Distance(EMD)
-- Dataset: Not tested on Pix3D
-- Model: Incomplete Fully Connected Layer because CUDA out of memory
+- 2022.09.18
+  - Loss Function: Not implemented Earth Mover's Distance(EMD)
+  - Dataset: Not tested on Pix3D
+  - Model: Incomplete Fully Connected Layer because CUDA out of memory
