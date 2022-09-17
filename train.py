@@ -98,3 +98,7 @@ if __name__ == '__main__':
 
     fig_loss = go.Figure(data=go.Scatter(x=e_losses, y=np.arange(len(e_losses))))
     fig_loss.write_html(outputs_path.joinpath(f"loss.html"))
+    with open(outputs_path.joinpath('info.txt'), 'w') as f:
+        f.write(f'only: {train_dataset.only}\n')
+        f.write(f'mode: {train_dataset.mode}\n')
+        f.write(f'transforms: {transforms_train}\n')
