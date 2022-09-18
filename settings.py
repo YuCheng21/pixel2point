@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
     only: list[str] = ["chair"]
     mode: ModeEnum = "easy"
+    seed: int = 0
 
     @validator('only')
     def only_must_in_shapenet_55_cls(cls, only):

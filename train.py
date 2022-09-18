@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from logger import logger, console_logger, file_logger
 from dataloader import ShapenetDataset
 from model import Pixel2Point
-from utils import show_3d, show_img
+from utils import show_3d, show_img, set_seed, seed_worker
 from settings import Training
 
 if __name__ == '__main__':
@@ -24,6 +24,7 @@ if __name__ == '__main__':
     console_logger()
     file_logger()
     settings = Training()
+    set_seed(settings.seed)
 
     hyper_param_batch = 32  # 32
     hyper_param_epoch = 10
@@ -44,7 +45,12 @@ if __name__ == '__main__':
         only=settings.only,
         mode=settings.mode
     )
-    train_loader = DataLoader(train_dataset, batch_size=hyper_param_batch, shuffle=True)
+    if train_dataset.length == 0:
+        raise Exception('no training data')
+    generator = torch.Generator()
+    generator.manual_seed(settings.seed)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=hyper_param_batch, shuffle=True,
+                              num_workers=8, worker_init_fn=seed_worker, generator=generator)
     logger.debug('==================================')
     logger.debug(f'Dataset only: {train_dataset.only}')
     logger.debug(f'Dataset mode: {train_dataset.mode}')

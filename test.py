@@ -11,7 +11,7 @@ from datetime import datetime
 from logger import logger, console_logger, file_logger
 from dataloader import ShapenetDataset
 from model import Pixel2Point
-from utils import show_3d, show_img
+from utils import show_3d, show_img, set_seed, seed_worker
 from settings import Testing
 
 if __name__ == '__main__':
@@ -23,6 +23,7 @@ if __name__ == '__main__':
     console_logger()
     file_logger()
     settings = Testing()
+    set_seed(settings.seed)
 
     hyper_param_batch = 32  # 32
 
@@ -40,7 +41,10 @@ if __name__ == '__main__':
         only=settings.only,
         mode=settings.mode
     )
-    test_loader = DataLoader(test_dataset, batch_size=hyper_param_batch, shuffle=True)
+    generator = torch.Generator()
+    generator.manual_seed(settings.seed)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=hyper_param_batch, shuffle=True,
+                             num_workers=8, worker_init_fn=seed_worker, generator=generator)
     logger.debug('==================================')
     logger.debug(f'Dataset only: {test_dataset.only}')
     logger.debug(f'Dataset mode: {test_dataset.mode}')
@@ -79,7 +83,7 @@ if __name__ == '__main__':
 
             # Save the output result
             # - Each epoch save 4 result
-            if i_batch % np.floor(test_dataset.length/hyper_param_batch/4).astype(int) == 0:
+            if i_batch % np.floor(test_dataset.length / hyper_param_batch / 4).astype(int) == 0:
                 show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{i_batch}.html'))
                 show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{i_batch}.html'))
                 show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{i_batch}.html'))
