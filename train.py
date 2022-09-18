@@ -60,10 +60,11 @@ if __name__ == '__main__':
     outputs_path = Path(f"./outputs/train/{current_time}")
     outputs_path.mkdir(parents=True, exist_ok=True)
     e_losses = []
+    sample = None
     for e in range(hyper_param_epoch):
         losses = []
         pbar = tqdm(train_loader, unit='batch', leave=True)
-        for i_batch, (pred, gt) in enumerate(pbar):
+        for i_batch, (pred, gt, index) in enumerate(pbar):
             pred = pred.to(device)
             gt = gt.to(device)
 
@@ -80,8 +81,18 @@ if __name__ == '__main__':
 
             pbar.set_description(f'Epoch [{e + 1}/{hyper_param_epoch}]')
             pbar.set_postfix(loss=loss.item())
+            
+            if i_batch == 0 and e == 0:
+                sample = index[0]
+                show_img(pred[0], mode='file', path=outputs_path.joinpath(f'vis_pred_{e}_{i_batch}.html'))
+                show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'vis_gt_{e}_{i_batch}.html'))
+                show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'vis_outputs_{e}_{i_batch}.html'))
+            else:
+                if sample in index:
+                    show_3d(outputs[index.tolist().index(sample)],
+                            mode='file', path=outputs_path.joinpath(f'vis_outputs_{e}_{i_batch}.html'))
 
-            if i_batch % 1500 == 0:
+            if i_batch % np.floor(train_dataset.length/hyper_param_batch/4).astype(int) == 0:
                 show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{e}_{i_batch}.html'))
                 show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{e}_{i_batch}.html'))
                 show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{e}_{i_batch}.html'))

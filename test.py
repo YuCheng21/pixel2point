@@ -62,7 +62,7 @@ if __name__ == '__main__':
     with torch.no_grad():
         losses = []
         pbar = tqdm(test_loader, unit='batch', leave=True)
-        for i_batch, (pred, gt) in enumerate(pbar):
+        for i_batch, (pred, gt, index) in enumerate(pbar):
             pred = pred.to(device)
             gt = gt.to(device)
 
@@ -74,7 +74,7 @@ if __name__ == '__main__':
             pbar.set_description(f'Testing')
             pbar.set_postfix(loss=loss.item())
 
-            if i_batch % 500 == 0:
+            if i_batch % np.floor(test_dataset.length/hyper_param_batch/4).astype(int) == 0:
                 show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{i_batch}.html'))
                 show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{i_batch}.html'))
                 show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{i_batch}.html'))

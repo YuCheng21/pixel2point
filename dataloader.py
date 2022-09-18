@@ -89,7 +89,7 @@ class ShapenetDataset(Dataset):
             image = self.transforms(image)
 
         gt_point = self.source_points[self.gt_points[index]]
-        return image, gt_point
+        return image, gt_point, index
 
     def __len__(self):
         return self.length
