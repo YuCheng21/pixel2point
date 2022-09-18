@@ -29,6 +29,7 @@ if __name__ == '__main__':
     hyper_param_epoch = 10
     hyper_param_learning_rate = 5e-5
 
+    # Prepare the dataset
     transforms_train = transforms.Compose([
         transforms.Grayscale(1),  # 0~255 -> 0~1, channel 3/4 -> 1
         transforms.Resize((128, 128)),
@@ -49,6 +50,8 @@ if __name__ == '__main__':
     logger.debug(f'Dataset mode: {train_dataset.mode}')
     logger.debug(f'Dataset transforms: {train_dataset.transforms}')
     logger.debug('DataLoader OK')
+
+    # Prepare the model
     pixel2point = Pixel2Point().to(device)
     optimizer = torch.optim.Adam(pixel2point.parameters(), lr=hyper_param_learning_rate)
     logger.debug(summary(pixel2point))
@@ -59,8 +62,12 @@ if __name__ == '__main__':
     current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     outputs_path = Path(f"./outputs/train/{current_time}")
     outputs_path.mkdir(parents=True, exist_ok=True)
-    e_losses = []
+    sample_path = outputs_path.joinpath('sample')
+    sample_path.mkdir(parents=True, exist_ok=True)
     sample = None
+    e_losses = []
+
+    # Train the model
     for e in range(hyper_param_epoch):
         losses = []
         pbar = tqdm(train_loader, unit='batch', leave=True)
@@ -81,24 +88,26 @@ if __name__ == '__main__':
 
             pbar.set_description(f'Epoch [{e + 1}/{hyper_param_epoch}]')
             pbar.set_postfix(loss=loss.item())
-            
+
+            # Save the output result
+            # - Watch the first object of the dataset change at each epoch
             if i_batch == 0 and e == 0:
                 sample = index[0]
-                show_img(pred[0], mode='file', path=outputs_path.joinpath(f'vis_pred_{e}_{i_batch}.html'))
-                show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'vis_gt_{e}_{i_batch}.html'))
-                show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'vis_outputs_{e}_{i_batch}.html'))
+                show_img(pred[0], mode='file', path=sample_path.joinpath(f'sample_pred_{e}_{i_batch}.html'))
+                show_3d(gt[0], mode='file', path=sample_path.joinpath(f'sample_gt_{e}_{i_batch}.html'))
+                show_3d(outputs[0], mode='file', path=sample_path.joinpath(f'sample_outputs_{e}_{i_batch}.html'))
             else:
                 if sample in index:
                     show_3d(outputs[index.tolist().index(sample)],
-                            mode='file', path=outputs_path.joinpath(f'vis_outputs_{e}_{i_batch}.html'))
-
+                            mode='file', path=sample_path.joinpath(f'sample_outputs_{e}_{i_batch}.html'))
+            # - Each epoch save 4 result
             if i_batch % np.floor(train_dataset.length/hyper_param_batch/4).astype(int) == 0:
                 show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{e}_{i_batch}.html'))
                 show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{e}_{i_batch}.html'))
                 show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{e}_{i_batch}.html'))
-
         e_losses.append(np.mean(losses))
 
+    # Save model
     model_path = Path("./model")
     model_path.mkdir(parents=True, exist_ok=True)
     torch.save({
@@ -108,8 +117,11 @@ if __name__ == '__main__':
         'loss': chamfer_distance,
     }, model_path.joinpath(f"{current_time}_param.pt"))
 
+    # Save loss value
     fig_loss = go.Figure(data=go.Scatter(x=e_losses, y=np.arange(len(e_losses))))
     fig_loss.write_html(outputs_path.joinpath(f"loss.html"))
+
+    # Save training information
     with open(outputs_path.joinpath('info.txt'), 'w') as f:
         f.write(f'only: {train_dataset.only}\n')
         f.write(f'mode: {train_dataset.mode}\n')

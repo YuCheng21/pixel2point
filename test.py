@@ -26,6 +26,7 @@ if __name__ == '__main__':
 
     hyper_param_batch = 32  # 32
 
+    # Prepare the dataset
     transforms_test = transforms.Compose([
         transforms.Grayscale(1),
         transforms.Resize((128, 128)),
@@ -45,6 +46,8 @@ if __name__ == '__main__':
     logger.debug(f'Dataset mode: {test_dataset.mode}')
     logger.debug(f'Dataset transforms: {test_dataset.transforms}')
     logger.debug('DataLoader OK')
+
+    # Prepare the model
     pixel2point = Pixel2Point().to(device)
     checkpoint = torch.load(settings.model_path)
     pixel2point.load_state_dict(checkpoint['model_state_dict'])
@@ -74,11 +77,14 @@ if __name__ == '__main__':
             pbar.set_description(f'Testing')
             pbar.set_postfix(loss=loss.item())
 
+            # Save the output result
+            # - Each epoch save 4 result
             if i_batch % np.floor(test_dataset.length/hyper_param_batch/4).astype(int) == 0:
                 show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{i_batch}.html'))
                 show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{i_batch}.html'))
                 show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{i_batch}.html'))
 
+    # Save testing information
     logger.info(f'Loss {np.mean(losses)}')
     with open(outputs_path.joinpath('info.txt'), 'w') as f:
         f.write(f'model path: {settings.model_path}\n')
