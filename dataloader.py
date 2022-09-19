@@ -29,9 +29,10 @@ class ShapenetDataset(Dataset):
         read_bar = tqdm(np_train_files, unit='file', leave=True)
         for key, value in enumerate(read_bar):
             index = value[0].split('.')[0]
-            train_name_json = Path(self.dataset_path).parent.parent.joinpath(f"{index}_id2name.json")
-            train_file_json = Path(self.dataset_path).parent.parent.joinpath(f"{index}_id2file.json")
-            train_h5 = Path(self.dataset_path).parent.parent.joinpath(f"{index}.h5")
+            prefix_path = Path(self.dataset_path).parent.parent.joinpath(f"{Path(index).parent.name}")
+            train_name_json = prefix_path.joinpath(f"{Path(index).name}_id2name.json")
+            train_file_json = prefix_path.joinpath(f"{Path(index).name}_id2file.json")
+            train_h5 = prefix_path.joinpath(f"{Path(index).name}.h5")
 
             with open(train_name_json) as f:
                 name = np.array(json.load(f))
