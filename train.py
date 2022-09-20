@@ -54,6 +54,7 @@ def run():
     logger.debug('==================================')
     logger.debug('Start Training')
 
+    settings.output_path = settings.output_path.parent.joinpath(f'{settings.output_path.name}_{settings.only}')
     train_path = settings.output_path.joinpath('train')
     train_path.mkdir(parents=True, exist_ok=True)
 
