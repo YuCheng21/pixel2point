@@ -1,7 +1,7 @@
-import torch
-import random
-import numpy as np
 import os
+import random
+import torch
+import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 
@@ -46,7 +46,7 @@ def show_3d(data, mode='browser', path='file.html'):
             mode='markers',
             marker={'size': 2, 'opacity': 0.8, }
         )],
-        layout=go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+        layout=go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0}, scene=dict(aspectmode='data'))
     )
     if mode == 'browser':
         fig.show(renderer='browser')
