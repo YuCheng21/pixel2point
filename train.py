@@ -16,24 +16,20 @@ from utils import show_3d, show_img, set_seed, seed_worker
 from settings import Training
 
 if __name__ == '__main__':
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger.debug('==================================')
-    logger.debug(f"Using {device} device")
-    logger.debug('==================================')
-
     console_logger()
     file_logger()
     settings = Training()
     set_seed(settings.seed)
 
-    hyper_param_batch = 32  # 32
-    hyper_param_epoch = 10
-    hyper_param_learning_rate = 5e-5
+    device = settings.device
+    logger.debug('==================================')
+    logger.debug(f"Using {device} device")
+    logger.debug('==================================')
 
     # Prepare the dataset
     transforms_train = transforms.Compose([
         transforms.Grayscale(1),  # 0~255 -> 0~1, channel 3/4 -> 1
-        transforms.Resize((128, 128)),
+        transforms.Resize(settings.resize),
         transforms.RandomRotation(10.),
         transforms.ToTensor(),
         # transforms.Normalize(0.5, 0.5)
@@ -49,8 +45,8 @@ if __name__ == '__main__':
         raise Exception('no training data')
     generator = torch.Generator()
     generator.manual_seed(settings.seed)
-    train_loader = DataLoader(dataset=train_dataset, batch_size=hyper_param_batch, shuffle=True,
-                              num_workers=8, worker_init_fn=seed_worker, generator=generator)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=settings.batch_size, shuffle=True,
+                              num_workers=settings.num_workers, worker_init_fn=seed_worker, generator=generator)
     logger.debug('==================================')
     logger.debug(f'Dataset only: {train_dataset.only}')
     logger.debug(f'Dataset mode: {train_dataset.mode}')
@@ -59,7 +55,7 @@ if __name__ == '__main__':
 
     # Prepare the model
     pixel2point = Pixel2Point().to(device)
-    optimizer = torch.optim.Adam(pixel2point.parameters(), lr=hyper_param_learning_rate)
+    optimizer = torch.optim.Adam(pixel2point.parameters(), lr=settings.learning_rate)
     logger.debug(summary(pixel2point))
     logger.debug('Model OK')
     logger.debug('==================================')
@@ -74,7 +70,7 @@ if __name__ == '__main__':
     e_losses = []
 
     # Train the model
-    for e in range(hyper_param_epoch):
+    for e in range(settings.epoch):
         losses = []
         pbar = tqdm(train_loader, unit='batch', leave=True)
         for i_batch, (pred, gt, index) in enumerate(pbar):
@@ -92,7 +88,7 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
 
-            pbar.set_description(f'Epoch [{e + 1}/{hyper_param_epoch}]')
+            pbar.set_description(f'Epoch [{e + 1}/{settings.epoch}]')
             pbar.set_postfix(loss=loss.item())
 
             # Save the output result
@@ -107,7 +103,7 @@ if __name__ == '__main__':
                     show_3d(outputs[index.tolist().index(sample)],
                             mode='file', path=sample_path.joinpath(f'sample_outputs_{e}_{i_batch}.html'))
             # - Each epoch save 4 result
-            if i_batch % np.floor(train_dataset.length/hyper_param_batch/4).astype(int) == 0:
+            if i_batch % np.floor(train_dataset.length / settings.batch_size / 4).astype(int) == 0:
                 show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{e}_{i_batch}.html'))
                 show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{e}_{i_batch}.html'))
                 show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{e}_{i_batch}.html'))
@@ -117,7 +113,7 @@ if __name__ == '__main__':
     model_path = Path("./model")
     model_path.mkdir(parents=True, exist_ok=True)
     torch.save({
-        'epoch': hyper_param_epoch,
+        'epoch': settings.epoch,
         'model_state_dict': pixel2point.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'loss': chamfer_distance,

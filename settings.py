@@ -1,6 +1,7 @@
 from pydantic import BaseSettings, validator
 from enum import Enum
 from pathlib import Path
+from torch.cuda import is_available
 
 
 class ModeEnum(str, Enum):
@@ -12,6 +13,10 @@ class Settings(BaseSettings):
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
     only: list[str] = ["chair"]
     mode: ModeEnum = "easy"
+    num_workers: int = 1
+    batch_size: int = 32  # 32
+    resize: tuple[int, int] = (128, 128)
+    device: str = "cuda" if is_available() else 'cpu'
     seed: int = 0
 
     @validator('only')
@@ -35,6 +40,8 @@ class Settings(BaseSettings):
 
 class Training(Settings):
     train_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/train_files.txt"
+    epoch: int = 10
+    learning_rate: float = 5e-5
 
 
 class Testing(Settings):
