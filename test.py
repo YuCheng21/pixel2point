@@ -11,14 +11,20 @@ from datetime import datetime
 from logger import logger, console_logger, file_logger
 from dataloader import ShapenetDataset
 from model import Pixel2Point
-from utils import show_3d, show_img, set_seed, seed_worker
+from utils import save_result, set_seed, seed_worker
 from settings import Testing
 
-if __name__ == '__main__':
+
+def run(output_path=None, only=None):
     console_logger()
     file_logger()
+
     settings = Testing()
     set_seed(settings.seed)
+
+    if output_path is not None:
+        settings.output_path = Path(output_path)
+        settings.model_path = settings.output_path.joinpath(f'model/{only}_param.pt')
 
     device = settings.device
     logger.debug('==================================')
@@ -50,14 +56,13 @@ if __name__ == '__main__':
     pixel2point = Pixel2Point().to(device)
     checkpoint = torch.load(settings.model_path)
     pixel2point.load_state_dict(checkpoint['model_state_dict'])
-    logger.debug(summary(pixel2point))
+    logger.debug(summary(pixel2point, verbose=0))
     logger.debug('Model OK')
     logger.debug('==================================')
     logger.debug('Start Testing')
 
-    current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    outputs_path = Path(f"./outputs/test/{current_time}")
-    outputs_path.mkdir(parents=True, exist_ok=True)
+    test_path = settings.output_path.joinpath('test')
+    test_path.mkdir(parents=True, exist_ok=True)
 
     # Test the model
     pixel2point.eval()
@@ -68,9 +73,9 @@ if __name__ == '__main__':
             pred = pred.to(device)
             gt = gt.to(device)
 
-            outputs = pixel2point(pred)
-            outputs = outputs.view((gt.shape[0], -1, 3)).type(torch.float64)
-            loss, _ = chamfer_distance(outputs, gt)
+            output = pixel2point(pred)
+            output = output.view((gt.shape[0], -1, 3)).type(torch.float64)
+            loss, _ = chamfer_distance(output, gt)
             losses.append(loss.item())
 
             pbar.set_description(f'Testing')
@@ -79,15 +84,17 @@ if __name__ == '__main__':
             # Save the output result
             # - Each epoch save 4 result
             if i_batch % np.floor(test_dataset.length / settings.batch_size / 4).astype(int) == 0:
-                show_img(pred[0], mode='file', path=outputs_path.joinpath(f'pred_{i_batch}.html'))
-                show_3d(outputs[0], mode='file', path=outputs_path.joinpath(f'outputs_{i_batch}.html'))
-                show_3d(gt[0], mode='file', path=outputs_path.joinpath(f'gt_{i_batch}.html'))
+                save_result(pred[0], output[0], gt[0], test_path, i_batch)
 
     # Save testing information
     logger.info(f'Loss {np.mean(losses)}')
-    with open(outputs_path.joinpath('info.txt'), 'w') as f:
+    with open(test_path.joinpath('info.txt'), 'w') as f:
         f.write(f'model path: {settings.model_path}\n')
         f.write(f'mean loss: {np.mean(losses)}\n')
         f.write(f'only: {test_dataset.only}\n')
         f.write(f'mode: {test_dataset.mode}\n')
         f.write(f'transforms: {test_dataset.transforms}\n')
+
+
+if __name__ == '__main__':
+    run()

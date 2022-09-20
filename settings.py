@@ -2,6 +2,7 @@ from pydantic import BaseSettings, validator
 from enum import Enum
 from pathlib import Path
 from torch.cuda import is_available
+from datetime import datetime
 
 
 class ModeEnum(str, Enum):
@@ -13,11 +14,14 @@ class Settings(BaseSettings):
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
     only: list[str] = ["chair"]
     mode: ModeEnum = "easy"
+    seed: int = 0
     num_workers: int = 1
     batch_size: int = 32  # 32
     resize: tuple[int, int] = (128, 128)
     device: str = "cuda" if is_available() else 'cpu'
-    seed: int = 0
+    output_path: Path = f"./output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    save_result: bool = True
+    save_model: bool = True
 
     @validator('only')
     def only_must_in_shapenet_55_cls(cls, only):

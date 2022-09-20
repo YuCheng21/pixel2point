@@ -35,7 +35,7 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 python train.py
 ```
 
-After starting the training, the output results are in `./outputs/train`
+After starting the training, the output results are in `./output/\<datetime>/train`
 
 ## Testing
 
@@ -45,7 +45,11 @@ python test.py
 
 > required to modify the model path in `settings.py`
 
-The test result is in `./outputs/test`
+The test result is in `./output/\<datetime>/test`
+
+## Alternative
+
+Or you can choose to execute `run.py` , which will automatically train and test.
 
 ## Notes
 

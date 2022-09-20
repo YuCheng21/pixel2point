@@ -64,3 +64,9 @@ def show_img(data, mode='browser', path='file.html'):
         img.show(renderer='browser')
     elif mode == 'file':
         img.write_html(path)
+
+
+def save_result(pred, output, gt, save_path, index):
+    show_img(pred, mode='file', path=save_path.joinpath(f'pred_{index}.html'))
+    show_3d(output, mode='file', path=save_path.joinpath(f'outputs_{index}.html'))
+    show_3d(gt, mode='file', path=save_path.joinpath(f'gt_{index}.html'))
