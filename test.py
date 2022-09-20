@@ -6,7 +6,6 @@ from torchinfo import summary
 from pytorch3d.loss import chamfer_distance
 from tqdm import tqdm
 from pathlib import Path
-from datetime import datetime
 
 from logger import logger, console_logger, file_logger
 from dataloader import ShapenetDataset
@@ -16,9 +15,6 @@ from settings import Testing
 
 
 def run(output_path=None, only=None):
-    console_logger()
-    file_logger()
-
     settings = Testing()
     set_seed(settings.seed)
 
@@ -96,4 +92,7 @@ def run(output_path=None, only=None):
 
 
 if __name__ == '__main__':
+    console_logger()
+    file_logger()
+
     run()

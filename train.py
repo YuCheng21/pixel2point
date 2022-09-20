@@ -15,9 +15,6 @@ from utils import show_3d, save_result, set_seed, seed_worker
 
 
 def run():
-    console_logger()
-    file_logger()
-
     settings = Training()
     set_seed(settings.seed)
 
@@ -127,4 +124,7 @@ def run():
 
 
 if __name__ == '__main__':
+    console_logger()
+    file_logger()
+
     output_path, only = run()
