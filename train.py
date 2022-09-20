@@ -24,7 +24,6 @@ def run():
     device = settings.device
     logger.debug('==================================')
     logger.debug(f"Using {device} device")
-    logger.debug('==================================')
 
     # Prepare the dataset
     transforms_train = transforms.Compose([

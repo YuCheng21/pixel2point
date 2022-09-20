@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     batch_size: int = 32  # 32
     resize: tuple[int, int] = (128, 128)
     device: str = "cuda" if is_available() else 'cpu'
-    output_path: Path = f"./output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    output_path: Path = f"./output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{only}"
     save_result: bool = True
     save_model: bool = True
 
