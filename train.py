@@ -48,9 +48,6 @@ if __name__ == '__main__':
     train_loader = DataLoader(dataset=train_dataset, batch_size=settings.batch_size, shuffle=True,
                               num_workers=settings.num_workers, worker_init_fn=seed_worker, generator=generator)
     logger.debug('==================================')
-    logger.debug(f'Dataset only: {train_dataset.only}')
-    logger.debug(f'Dataset mode: {train_dataset.mode}')
-    logger.debug(f'Dataset transforms: {train_dataset.transforms}')
     logger.debug('DataLoader OK')
 
     # Prepare the model
