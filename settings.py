@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     save_model: bool = True
 
     @validator('only')
+    @classmethod
     def only_must_in_shapenet_55_cls(cls, only):
         shapenet_55_cls = [
             'airplane', 'bag', 'basket', 'bathtub', 'bed', 'bench', 'birdhouse', 'bookshelf', 'bottle', 'bowl', 'bus',

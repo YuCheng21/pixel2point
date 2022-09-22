@@ -72,7 +72,7 @@ def run():
             gt = gt.to(device)
 
             # Forward pass
-            output = pixel2point(pred)
+            output = pixel2point.forward(pred)
             output = output.view((gt.shape[0], -1, 3)).type(torch.float64)
             loss, _ = chamfer_distance(output, gt)
             losses.append(loss.item())
