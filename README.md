@@ -57,3 +57,7 @@ Or you can choose to execute `run.py` , which will automatically train and test.
     - Loss Function: Not implemented Earth Mover's Distance(EMD)
     - Dataset: Not tested on Pix3D
     - Model: Incomplete Fully Connected Layer because CUDA out of memory
+
+- 2022.09.23
+    - The "pytorch3d" chamfer distance on the CNN layer is non-deterministic at backward propagation on the GPU.
+    - This repo uses the "pytorch" function to calculate the chamfer distance to make the loss function deterministic on the CNN layers (Increase execution time by 50%).

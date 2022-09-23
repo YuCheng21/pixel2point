@@ -1,7 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
 import torch
-from pytorch3d.loss import chamfer_distance
 from torch.utils.data import DataLoader
 from torchinfo import summary
 from torchvision import transforms
@@ -12,11 +11,13 @@ from logger import logger, console_logger, file_logger
 from model import Pixel2Point
 from settings import Training
 from utils import show_3d, save_result, set_seed, seed_worker
+from loss import chamfer_distance
 
 
 def run():
     settings = Training()
-    set_seed(settings.seed)
+    if settings.reproducibility is True:
+        set_seed(settings.seed)
 
     device = settings.device
     logger.debug('==================================')
@@ -65,21 +66,22 @@ def run():
     # Train the model
     e_losses = []
     for e in range(settings.epoch):
+        pixel2point.train()
         losses = []
         pbar = tqdm(train_loader, unit='batch', leave=True)
         for i_batch, (pred, gt, index) in enumerate(pbar):
-            pred = pred.to(device)
-            gt = gt.to(device)
+            pred = pred.to(device=device)
+            gt = gt.to(device=device)
 
             # Forward pass
             output = pixel2point.forward(pred)
-            output = output.view((gt.shape[0], -1, 3)).type(torch.float64)
+            output = output.type_as(gt).view(gt.shape[0], -1, 3)
             loss, _ = chamfer_distance(output, gt)
             losses.append(loss.item())
 
             # Backward and optimize
             optimizer.zero_grad()
-            loss.backward()
+            torch.autograd.backward(loss)
             optimizer.step()
 
             pbar.set_description(f'Epoch [{e + 1}/{settings.epoch}]')

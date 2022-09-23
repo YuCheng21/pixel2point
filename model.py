@@ -1,13 +1,11 @@
 import torch
 from torch import nn
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 
 class Pixel2Point(nn.Module):
     def __init__(self):
         super(Pixel2Point, self).__init__()
-        self.initial_point = self.generate_initial_point().to(device)
+        self.initial_point = self.generate_initial_point()
         self.layer1 = self.conv_module(1, 32)
         self.layer2 = self.conv_module(32, 64)
         self.layer3 = self.conv_module(64, 128)
@@ -31,7 +29,8 @@ class Pixel2Point(nn.Module):
         batch_size = fv.shape[0]
 
         initial_pc_fv = torch.cat((
-            torch.tile(self.initial_point, (batch_size, 1)).view((batch_size, 256, 3)),  # [batch_size, 256, 3]
+            torch.tile(self.initial_point.to(fv.device), (batch_size, 1)).view(
+                (batch_size, 256, 3)),  # [batch_size, 256, 3]
             torch.broadcast_to(fv.squeeze(dim=3).squeeze(dim=2).unsqueeze(dim=1), (batch_size, 256, 256))
             # [batch_size, 256, 256]
         ), 2)  # [batch_size, 256, 259]

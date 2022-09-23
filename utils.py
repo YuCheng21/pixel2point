@@ -11,6 +11,7 @@ def set_seed(seed):
     # PyTorch random number generator
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     # Python
     random.seed(seed)
     # Random number generators in other libraries

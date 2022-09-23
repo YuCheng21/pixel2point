@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
     only: list[str] = ["chair"]
     mode: ModeEnum = "easy"
+    reproducibility: bool = False
     seed: int = 0
     num_workers: int = 1
     batch_size: int = 32  # 32
