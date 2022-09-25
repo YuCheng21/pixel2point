@@ -72,7 +72,7 @@ if __name__ == '__main__':
         worker_init_fn=seed_worker, generator=generator
     )
 
-    pixel2point = Pixel2Point().to(device)
+    pixel2point = Pixel2Point(initial_point=settings.initial_point).to(device)
     logger.debug(summary(pixel2point, verbose=0))
 
     optimizer = torch.optim.Adam(pixel2point.parameters(), lr=settings.learning_rate)
