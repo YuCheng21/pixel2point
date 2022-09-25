@@ -1,8 +1,8 @@
 from pydantic import BaseSettings, validator
+from typing import Optional
 from enum import Enum
 from pathlib import Path
 from torch.cuda import is_available
-from datetime import datetime
 
 
 class ModeEnum(str, Enum):
@@ -14,15 +14,17 @@ class Settings(BaseSettings):
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
     only: list[str] = ["chair"]
     mode: ModeEnum = "easy"
+    num_workers: int = 1
     reproducibility: bool = False
     seed: int = 0
-    num_workers: int = 1
+    use_amp: bool = True
     batch_size: int = 32  # 32
     resize: tuple[int, int] = (128, 128)
     device: str = "cuda" if is_available() else 'cpu'
-    output_path: Path = f"./output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    save_result: bool = True
     save_model: bool = True
+    save_result: bool = True
+
+    initial_point: Optional[str] = None
 
     @validator('only')
     @classmethod
@@ -45,16 +47,19 @@ class Settings(BaseSettings):
 
 
 class Training(Settings):
+    config = 'train'
     train_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/train_files.txt"
+    val_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/val_files.txt"
     epoch: int = 10
     learning_rate: float = 5e-5
 
 
 class Testing(Settings):
+    config = 'test'
     test_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/test_files.txt"
     model_path: Path = r"/root/pixel2point/model/2022-09-15_11-32-03_param.pt"
 
 
 if __name__ == '__main__':
-    settings = Testing()
+    settings = Settings()
     print(settings.dict())

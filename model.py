@@ -3,9 +3,8 @@ from torch import nn
 
 
 class Pixel2Point(nn.Module):
-    def __init__(self):
+    def __init__(self, initial_point=None):
         super(Pixel2Point, self).__init__()
-        self.initial_point = self.generate_initial_point()
         self.layer1 = self.conv_module(1, 32)
         self.layer2 = self.conv_module(32, 64)
         self.layer3 = self.conv_module(64, 128)
@@ -17,6 +16,10 @@ class Pixel2Point(nn.Module):
         self.fc2 = self.fc_module(2048 * 5, 2048 * 5)
         self.fc3 = self.fc_module(2048 * 5, 2048 * 4)
         self.fc4 = nn.Linear(2048 * 4, 2048 * 3)
+        if initial_point == 'two_circle':
+            self.initial_point = self.two_ball()
+        else:
+            self.initial_point = self.generate_initial_point()
 
     def forward(self, x):
         encoder_out = self.layer1(x)
@@ -62,3 +65,7 @@ class Pixel2Point(nn.Module):
             torch.flatten(1 * torch.outer(torch.sin(u), torch.sin(v))),
             torch.flatten(1 * torch.outer(torch.ones(torch.Tensor.size(u)), torch.cos(v))))
         ).T
+
+    def two_ball(self):
+        one_ball = self.generate_initial_point()
+        return torch.concat((one_ball[0:256:2], one_ball[1:256:2]))
