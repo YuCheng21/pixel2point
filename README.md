@@ -7,9 +7,9 @@ Sphere
 
 |                            Input 2D Image                            |                       Ground Truth Point Cloud                       |                          Output Point Cloud                          |
 | :------------------------------------------------------------------: | :------------------------------------------------------------------: | :------------------------------------------------------------------: |
-| <img src="./screenshot/airplane/chrome_cuTZ4RntEn.png" width="205"/> | <img src="./screenshot/airplane/chrome_5cB3gbwb64.png" width="205"/> | <img src="./screenshot/airplane/chrome_r5UX3VIGP2.png" width="205"/> |
-| <img src="./screenshot/chair/chrome_5d7roP6GNt.png" width="205"/> | <img src="./screenshot/chair/chrome_NaiM1nHE9U.png" width="205"/> | <img src="./screenshot/chair/chrome_hO2gCM0saQ.png" width="205"/> |
-| <img src="./screenshot/table/chrome_fLUuWibkLL.png" width="205"/> | <img src="./screenshot/table/chrome_HrwTifoCjR.png" width="205"/> | <img src="./screenshot/table/chrome_kaUwuJTKTG.png" width="205"/> |
+| <img src="./static/airplane/chrome_cuTZ4RntEn.png" width="205"/> | <img src="./static/airplane/chrome_5cB3gbwb64.png" width="205"/> | <img src="./static/airplane/chrome_r5UX3VIGP2.png" width="205"/> |
+| <img src="./static/chair/chrome_5d7roP6GNt.png" width="205"/> | <img src="./static/chair/chrome_NaiM1nHE9U.png" width="205"/> | <img src="./static/chair/chrome_hO2gCM0saQ.png" width="205"/> |
+| <img src="./static/table/chrome_fLUuWibkLL.png" width="205"/> | <img src="./static/table/chrome_HrwTifoCjR.png" width="205"/> | <img src="./static/table/chrome_kaUwuJTKTG.png" width="205"/> |
 
 ## Environment
 
@@ -35,8 +35,6 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 python train.py
 ```
 
-After starting the training, the output results are in `./output/<datetime>/train`
-
 ## Testing
 
 ```bash
@@ -44,12 +42,6 @@ python test.py
 ```
 
 > required to modify the model path in `settings.py`
-
-The test result is in `./output/<datetime>/test`
-
-## Alternative
-
-Or you can choose to execute `run.py` , which will automatically train and test.
 
 ## Notes
 
