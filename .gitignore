@@ -6,4 +6,5 @@ model
 outputs
 output
 .env
+runs
 testing
