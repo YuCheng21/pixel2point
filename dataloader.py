@@ -7,7 +7,7 @@ import h5py
 from PIL import Image
 
 from logger import logger
-from settings import Testing
+from settings import Settings
 
 
 class ShapenetDataset(Dataset):
@@ -22,9 +22,6 @@ class ShapenetDataset(Dataset):
 
     def read_dataset(self):
         logger.debug('==================================')
-        logger.debug(f'Dataset only: {self.only}')
-        logger.debug(f'Dataset mode: {self.mode}')
-        logger.debug(f'Dataset transforms: {self.transforms}')
         logger.debug(f'Read Dataset')
         all_name, all_file, all_gt_points = np.empty([0]), np.empty([0]), np.empty([0, 2048, 3])
         with open(self.dataset_path, 'r') as f:
@@ -101,7 +98,7 @@ class ShapenetDataset(Dataset):
 
 
 if __name__ == '__main__':
-    settings = Testing()
+    settings = Settings()
     test_dataset = ShapenetDataset(
         dataset_path=settings.test_dataset_path,
         snapshot_path=settings.snapshot_path,
