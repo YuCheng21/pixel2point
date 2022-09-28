@@ -32,11 +32,9 @@ class Pixel2Point(nn.Module):
         batch_size = fv.shape[0]
 
         initial_pc_fv = torch.cat((
-            torch.tile(self.initial_point.to(fv.device), (batch_size, 1)).view(
-                (batch_size, 256, 3)),  # [batch_size, 256, 3]
-            torch.broadcast_to(fv.squeeze(dim=3).squeeze(dim=2).unsqueeze(dim=1), (batch_size, 256, 256))
-            # [batch_size, 256, 256]
-        ), 2)  # [batch_size, 256, 259]
+            self.initial_point.to(fv.device).view(1, 256, 3).repeat(batch_size, 1, 1),  # torch.Size([batch, 256, 3])
+            fv.view(batch_size, 1, 256).repeat(1, 256, 1)  # torch.Size([batch, 256, 256])
+        ), dim=2, )  # [batch_size, 256, 259]
 
         generator_out = self.fc1(initial_pc_fv.view(batch_size, -1))
         generator_out = self.fc2(generator_out)
@@ -68,4 +66,5 @@ class Pixel2Point(nn.Module):
 
     def two_ball(self):
         one_ball = self.generate_initial_point()
+        one_ball[1:256:2, 2] += 1
         return torch.concat((one_ball[0:256:2], one_ball[1:256:2]))
