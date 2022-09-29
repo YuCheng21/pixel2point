@@ -6,24 +6,42 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 
-def set_seed(seed):
-    # URL: https://pytorch.org/docs/stable/notes/randomness.html
-    # PyTorch random number generator
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    # Python
-    random.seed(seed)
-    # Random number generators in other libraries
-    np.random.seed(seed)
-    # ensures that CUDA selects the same algorithm each time an application is run,
-    # that algorithm itself may be nondeterministic
-    torch.backends.cudnn.benchmark = False
-    # Avoiding nondeterministic algorithm
-    torch.use_deterministic_algorithms(True)
-    # CUDA Results reproducibility (CUDA 11.7.1)
-    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-    os.environ['PYTHONHASHSEED'] = str(seed)
+def env_init(reproducibility, seed):
+    if reproducibility is True:
+        # URL: https://pytorch.org/docs/stable/notes/randomness.html
+        # PyTorch random number generator
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        # Python
+        random.seed(seed)
+        # Random number generators in other libraries
+        np.random.seed(seed)
+        # ensures that CUDA selects the same algorithm each time an application is run,
+        # that algorithm itself may be nondeterministic
+        torch.backends.cudnn.benchmark = False
+        # Avoiding nondeterministic algorithm
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+        # CUDA Results reproducibility (CUDA 11.7.1)
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+        os.environ['PYTHONHASHSEED'] = str(seed)
+        # DataLoader reproducibility
+        generator = torch.Generator()
+        generator.manual_seed(seed)
+        worker_init_fn = seed_worker
+    else:
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = False
+        torch.use_deterministic_algorithms(False)
+        generator = None
+        worker_init_fn = None
+    
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = True
+
+    return worker_init_fn, generator
 
 
 def seed_worker(worker_id):

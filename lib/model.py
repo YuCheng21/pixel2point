@@ -3,7 +3,7 @@ from torch import nn
 
 
 class Pixel2Point(nn.Module):
-    def __init__(self, initial_point=None):
+    def __init__(self, initial_point=0):
         super(Pixel2Point, self).__init__()
         self.layer1 = self.conv_module(1, 32)
         self.layer2 = self.conv_module(32, 64)
@@ -16,7 +16,7 @@ class Pixel2Point(nn.Module):
         self.fc2 = self.fc_module(2048 * 5, 2048 * 5)
         self.fc3 = self.fc_module(2048 * 5, 2048 * 4)
         self.fc4 = nn.Linear(2048 * 4, 2048 * 3)
-        if initial_point == 'two_circle':
+        if initial_point == 2:
             self.initial_point = self.two_ball()
         else:
             self.initial_point = self.generate_initial_point()

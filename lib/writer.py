@@ -19,7 +19,7 @@ def profile(dir_name=None):
         on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=dir_name),
         record_shapes=True,
         with_stack=True,
-        profile_memory=True
+        # profile_memory=True
     )
 
 
