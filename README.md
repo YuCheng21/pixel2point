@@ -32,7 +32,7 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 ## Training
 
 ``` bash
-python train.py
+python main.py
 ```
 
 ## Testing
