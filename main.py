@@ -192,7 +192,7 @@ class MyProcess():
                 summary(self.pixel2point, input_size, col_names=["input_size", "output_size", "num_params"], verbose=0)
             )
             self.writer.add_graph(self.pixel2point, torch.rand(input_size).to(self.device))
-            self.save_mesh('Initial_Point', self.pixel2point.initial_point, global_step=0)
+            self.save_mesh('Initial_Point', self.pixel2point.initial_point.unsqueeze(0), global_step=0)
 
             self.loss_function = chamfer_distance
             self.optimizer = torch.optim.Adam(self.pixel2point.parameters(), lr=self.hparam.learning_rate)

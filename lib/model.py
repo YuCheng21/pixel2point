@@ -67,7 +67,7 @@ class Pixel2Point(nn.Module):
 
     def fibonacci_sphere(self, num_pts=256, offset=(0, 0, 0), radius=1):
         # https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
-        indices = torch.arange(0, num_pts, dtype=float) + 0.5
+        indices = torch.arange(0, num_pts, dtype=torch.float32) + 0.5
         phi = torch.arccos(1 - 2*indices/num_pts)
         theta = torch.pi * (1 + 5**0.5) * indices
         x, y, z = torch.cos(theta) * torch.sin(phi), torch.sin(theta) * torch.sin(phi), torch.cos(phi)
