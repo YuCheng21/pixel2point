@@ -7,7 +7,7 @@ from itertools import product
 from pydantic import create_model
 from json import dumps
 
-from lib.writer import summary_writer, profile, mesh_dict, d32rgb, d42rgb
+from lib.writer import summary_writer, profile, mesh_dict, d42rgb
 from lib.dataloader import ShapenetDataset
 from lib.logger import logger, console_logger, file_logger
 from lib.model import Pixel2Point
@@ -47,7 +47,7 @@ class MyProcess():
             # self.optimizer.step()
             self.scaler.step(self.optimizer)
             self.scaler.update()
-            self.prof.step
+            self.prof.step()
 
             self.loss_train += loss.item()
             train_bar.set_description(f'Epoch [{self.i_epoch}/{self.hparam.epoch}]')
@@ -206,9 +206,17 @@ class MyProcess():
 
                 self.writer.add_hparams(
                     {
-                        'learning_rate': self.hparam.learning_rate,
+                        'use_amp': self.hparam.use_amp,
+                        'reproducibility': self.hparam.reproducibility,
+                        'only': self.hparam.only,
+                        'mode': self.hparam.mode,
+                        'dataset_remake': self.hparam.dataset_remake,
                         'batch_size': self.hparam.batch_size,
-                        'initial_point': self.hparam.initial_point
+                        'shuffle': self.hparam.shuffle,
+                        'num_workers': self.hparam.num_workers,
+                        'pin_memory': self.hparam.pin_memory,
+                        'initial_point': self.hparam.initial_point,
+                        'learning_rate': self.hparam.learning_rate,
                     },
                     {
                         'Loss/train': self.loss_train / len(self.loader_train),
