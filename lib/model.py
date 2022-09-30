@@ -17,9 +17,9 @@ class Pixel2Point(nn.Module):
         self.fc3 = self.fc_module(2048 * 5, 2048 * 4)
         self.fc4 = nn.Linear(2048 * 4, 2048 * 3)
         if initial_point == 2:
-            self.initial_point = self.two_ball()
+            self.initial_point = self.multiple_sphere()
         else:
-            self.initial_point = self.generate_initial_point()
+            self.initial_point = self.fibonacci_sphere()
 
     def forward(self, x):
         encoder_out = self.layer1(x)
@@ -55,16 +55,23 @@ class Pixel2Point(nn.Module):
             nn.ReLU(),
         )
 
-    def generate_initial_point(self):
+    def sphere(self, offset=(0, 0, 0)):
         u = torch.linspace(0, 2 * torch.pi, 16)
         v = torch.linspace(0, torch.pi, 16)
-        return torch.vstack((
-            torch.flatten(1 * torch.outer(torch.cos(u), torch.sin(v))),
-            torch.flatten(1 * torch.outer(torch.sin(u), torch.sin(v))),
-            torch.flatten(1 * torch.outer(torch.ones(torch.Tensor.size(u)), torch.cos(v))))
-        ).T
+        x = torch.flatten(1 * torch.outer(torch.cos(u), torch.sin(v)))
+        y = torch.flatten(1 * torch.outer(torch.sin(u), torch.sin(v)))
+        z = torch.flatten(1 * torch.outer(torch.ones(torch.Tensor.size(u)), torch.cos(v)))
+        return torch.stack((x + offset[0], y + offset[1], z + offset[2]), 1)
 
-    def two_ball(self):
-        one_ball = self.generate_initial_point()
-        one_ball[1:256:2, 2] += 1
-        return torch.concat((one_ball[0:256:2], one_ball[1:256:2]))
+    def fibonacci_sphere(self, num_pts=256, offset=(0, 0, 0), radius=1):
+        # https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
+        indices = torch.arange(0, num_pts, dtype=float) + 0.5
+        phi = torch.arccos(1 - 2*indices/num_pts)
+        theta = torch.pi * (1 + 5**0.5) * indices
+        x, y, z = torch.cos(theta) * torch.sin(phi), torch.sin(theta) * torch.sin(phi), torch.cos(phi)
+        return torch.stack((x * radius + offset[0], y * radius + offset[1], z * radius + offset[2]), 1)
+
+    def multiple_sphere(self):
+        sphere_1 = self.fibonacci_sphere(128, (0, 0, 0), 1)
+        sphere_2 = self.fibonacci_sphere(128, (2, 2, 2), 1)
+        return torch.cat((sphere_1, sphere_2), 0)
