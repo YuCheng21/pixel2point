@@ -207,7 +207,8 @@ class MyProcess():
                 self.writer.add_hparams(
                     {
                         'learning_rate': self.hparam.learning_rate,
-                        'batch_size': self.hparam.batch_size
+                        'batch_size': self.hparam.batch_size,
+                        'initial_point': self.hparam.initial_point
                     },
                     {
                         'Loss/train': self.loss_train / len(self.loader_train),

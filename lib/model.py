@@ -18,6 +18,8 @@ class Pixel2Point(nn.Module):
         self.fc4 = nn.Linear(2048 * 4, 2048 * 3)
         if initial_point == 2:
             self.initial_point = self.multiple_sphere()
+        elif initial_point == 1:
+            self.initial_point = self.fibonacci_sphere()
         else:
             self.initial_point = self.fibonacci_sphere()
 
