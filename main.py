@@ -7,7 +7,7 @@ from itertools import product
 from pydantic import create_model
 from json import dumps
 
-from lib.writer import summary_writer, profile, mesh_dict, text_string, d32rgb, d42rgb
+from lib.writer import summary_writer, profile, mesh_dict, d32rgb, d42rgb
 from lib.dataloader import ShapenetDataset
 from lib.logger import logger, console_logger, file_logger
 from lib.model import Pixel2Point
@@ -24,7 +24,6 @@ class MyProcess():
         self.parameters = self.settings.dict(exclude={
             'snapshot_path', 'output_path', 'model_path',
             'train_dataset_path', 'val_dataset_path', 'test_dataset_path',
-            'only', 'resize'
         })
 
     def train_loop(self):
@@ -89,6 +88,16 @@ class MyProcess():
                 test_bar.set_description(f'Testing')
                 test_bar.set_postfix(loss=loss.item())
 
+    def transform_config(self):
+        preprocess = []
+        if 'grayscale' in self.hparam.preprocess:
+            preprocess += [transforms.Grayscale(1)]
+        if 'resize' in self.hparam.preprocess:
+            preprocess += [transforms.Resize(self.hparam.resize)]
+        if 'totensor' in self.hparam.preprocess:
+            preprocess += [transforms.ToTensor]
+        return transforms.Compose(preprocess)
+
     def save_model(self, key, data):
         model_path = self.settings.output_path.joinpath('model')
         model_path.mkdir(parents=True, exist_ok=True)
@@ -145,24 +154,20 @@ class MyProcess():
 
             self.worker_init_fn, self.generator = env_init(self.hparam.reproducibility, self.hparam.seed)
 
-            self.preprocess = transforms.Compose([
-                transforms.Grayscale(1),
-                transforms.Resize(self.settings.resize),
-                transforms.ToTensor(),
-            ])
+            self.preprocess = self.transform_config()
             self.dataset_train = ShapenetDataset(
                 dataset_path=self.settings.train_dataset_path, snapshot_path=self.settings.snapshot_path,
-                transforms=self.preprocess, only=self.settings.only,
+                transforms=self.preprocess, only=self.hparam.only,
                 mode=self.hparam.mode, remake=self.hparam.dataset_remake
             )
             self.dataset_validation = ShapenetDataset(
                 dataset_path=self.settings.val_dataset_path, snapshot_path=self.settings.snapshot_path,
-                transforms=self.preprocess, only=self.settings.only,
+                transforms=self.preprocess, only=self.hparam.only,
                 mode=self.hparam.mode, remake=self.hparam.dataset_remake
             )
             self.dataset_test = ShapenetDataset(
                 dataset_path=self.settings.test_dataset_path, snapshot_path=self.settings.snapshot_path,
-                transforms=self.preprocess, only=self.settings.only,
+                transforms=self.preprocess, only=self.hparam.only,
                 mode=self.hparam.mode, remake=self.hparam.dataset_remake
             )
             self.loader_train = DataLoader(
@@ -181,7 +186,7 @@ class MyProcess():
                 worker_init_fn=self.worker_init_fn, generator=self.generator
             )
             self.pixel2point = Pixel2Point(initial_point=self.hparam.initial_point).to(self.device)
-            input_size = [self.hparam.batch_size, 1] + list(self.settings.resize)
+            input_size = [self.hparam.batch_size, 1] + self.hparam.resize
             self.writer.add_graph(self.pixel2point, torch.rand(input_size).to(self.device))
             logger.debug(
                 summary(self.pixel2point, input_size, col_names=["input_size", "output_size", "num_params"], verbose=0)

@@ -1,8 +1,6 @@
-
 import torch
 from torchvision import transforms
 from tensorboardX import SummaryWriter
-from json import dumps
 
 
 d42rgb = transforms.Lambda(lambda x: x.repeat(1, 3, 1, 1) if x.size(1) == 1 else x)
@@ -21,18 +19,6 @@ def profile(dir_name=None):
         with_stack=True,
         # profile_memory=True
     )
-
-
-def text_string(*args):
-    return dumps({
-        **(args[0].dict(exclude={
-            'snapshot_path', 'train_dataset_path', 'output_path',
-            'test_dataset_path', 'model_path', 'val_dataset_path'
-        })),
-        **{
-            'transforms': str(args[1].transforms)
-        },
-    }, indent=2)
 
 
 def mesh_dict(data):
