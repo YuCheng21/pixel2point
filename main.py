@@ -135,12 +135,13 @@ class MyProcess():
         self.writer.add_histogram('fc4/weight', self.pixel2point.fc4.weight, global_step=self.global_step)
         self.writer.add_histogram('fc4/bais', self.pixel2point.fc4.bias, global_step=self.global_step)
 
+    def save_mesh(self, tag, coordinate, global_step):
+        self.writer.add_mesh(tag, coordinate, config_dict=mesh_dict(coordinate), global_step=global_step)
+
     def save_result(self, data_type):
         self.writer.add_images(f'Input/{data_type}', d42rgb(self.pred), self.global_step)
-        self.writer.add_mesh(f'Output/{data_type}', self.output,
-                             config_dict=mesh_dict(self.output), global_step=self.global_step)
-        self.writer.add_mesh(f'GT/{data_type}', self.gt,
-                             config_dict=mesh_dict(self.gt), global_step=self.global_step)
+        self.save_mesh(f'Output/{data_type}', self.output, self.global_step)
+        self.save_mesh(f'GT/{data_type}', self.gt, self.global_step)
 
     def run(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
@@ -187,10 +188,12 @@ class MyProcess():
             )
             self.pixel2point = Pixel2Point(initial_point=self.hparam.initial_point).to(self.device)
             input_size = [self.hparam.batch_size, 1] + self.hparam.resize
-            self.writer.add_graph(self.pixel2point, torch.rand(input_size).to(self.device))
             logger.debug(
                 summary(self.pixel2point, input_size, col_names=["input_size", "output_size", "num_params"], verbose=0)
             )
+            self.writer.add_graph(self.pixel2point, torch.rand(input_size).to(self.device))
+            self.save_mesh('Initial_Point', self.pixel2point.initial_point, global_step=0)
+
             self.loss_function = chamfer_distance
             self.optimizer = torch.optim.Adam(self.pixel2point.parameters(), lr=self.hparam.learning_rate)
             self.scaler = torch.cuda.amp.GradScaler(enabled=self.hparam.use_amp)
@@ -199,6 +202,7 @@ class MyProcess():
                 self.train_loop()
                 self.validation_loop()
                 self.save_result('validation')
+                # self.save_weight()
 
                 self.writer.add_hparams(
                     {
