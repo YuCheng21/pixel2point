@@ -13,7 +13,7 @@ from lib.dataloader import ShapenetDataset
 from lib.logger import logger, console_logger, file_logger
 from lib.model import Pixel2Point
 from lib.settings import Settings
-from lib.utils import env_init
+from lib.utils import env_init, dataloader_init
 from lib.loss import chamfer_distance
 from lib.notification import send_telegram
 
@@ -26,7 +26,7 @@ class MyProcess():
         self.parameters = self.settings.dict(exclude={
             'snapshot_path', 'output_path', 'model_path',
             'train_dataset_path', 'val_dataset_path', 'test_dataset_path',
-            'telegram_token', 'telegram_chat_id'
+            'telegram_token', 'telegram_chat_id', 'discord_webhook_url'
         })
 
     def train_loop(self):
@@ -35,7 +35,7 @@ class MyProcess():
         self.prof.start()
         train_bar = tqdm(self.loader_train, unit='batch', leave=True, colour='#B8DA7E')
         for i_batch, (self.pred, self.gt, index) in enumerate(train_bar):
-            self.global_step = self.i_epoch
+            self.global_step = self.i_epoch + 1
             self.pred = self.pred.to(self.device)
             self.gt = self.gt.to(self.device)
 
@@ -53,7 +53,7 @@ class MyProcess():
             self.prof.step()
 
             self.loss_train += loss.item()
-            train_bar.set_description(f'Epoch [{self.i_epoch}/{self.hparam.epoch}]')
+            train_bar.set_description(f'Epoch [{self.i_epoch + 1}/{self.hparam.epoch}]')
             train_bar.set_postfix(loss=loss.item())
         self.prof.stop()
 
@@ -73,6 +73,9 @@ class MyProcess():
                 self.loss_val += loss.item()
                 val_bar.set_description(f'Validating')
                 val_bar.set_postfix(loss=loss.item())
+
+                if i_batch == 0:
+                    self.save_result(f'validation_{i_batch}', sample=100)
 
     def test_loop(self):
         self.loss_test = 0
@@ -100,6 +103,20 @@ class MyProcess():
         if 'totensor' in self.hparam.preprocess:
             preprocess += [transforms.ToTensor()]
         return transforms.Compose(preprocess)
+
+    def shapenet_config(self, dataset_path):
+        return ShapenetDataset(
+            dataset_path=dataset_path, snapshot_path=self.settings.snapshot_path,
+            transforms=self.preprocess, only=self.hparam.only,
+            mode=self.hparam.mode, remake=self.hparam.dataset_remake
+        )
+
+    def loader_config(self, datset):
+        return DataLoader(
+            dataset=datset, batch_size=self.hparam.batch_size, shuffle=self.hparam.shuffle,
+            num_workers=self.hparam.num_workers, pin_memory=self.hparam.pin_memory,
+            worker_init_fn=self.worker_init_fn, generator=self.generator
+        )
 
     def save_model(self, key, data):
         model_path = self.settings.output_path.joinpath('model')
@@ -141,12 +158,12 @@ class MyProcess():
     def save_mesh(self, tag, coordinate, global_step):
         self.writer.add_mesh(tag, coordinate, config_dict=mesh_dict(coordinate), global_step=global_step)
 
-    def save_result(self, data_type, sample=100):
+    def save_result(self, data_type, sample=None):
         self.writer.add_images(f'Input/{data_type}', d42rgb(self.pred[:sample]), self.global_step)
         self.save_mesh(f'Output/{data_type}', self.output[:sample], self.global_step)
         self.save_mesh(f'GT/{data_type}', self.gt[:sample], self.global_step)
 
-    def run(self):
+    def train_validation(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
             self.writer = summary_writer(comment='main')
             self.prof = profile(dir_name=self.writer.logdir)
@@ -156,39 +173,18 @@ class MyProcess():
             logger.debug(f"Hyper Parameter: {dumps(hparam_dict, indent=2)}")
             self.writer.add_text('Hyper Parameter', text_string=f"<pre>{dumps(hparam_dict, indent=2)}", global_step=0)
 
-            self.worker_init_fn, self.generator = env_init(self.hparam.reproducibility, self.hparam.seed)
+            env_init(self.hparam.reproducibility, self.hparam.seed)
+            self.worker_init_fn, self.generator = dataloader_init(self.hparam.loader_reproducibility, self.hparam.seed)
 
             self.preprocess = self.transform_config()
-            self.dataset_train = ShapenetDataset(
-                dataset_path=self.settings.train_dataset_path, snapshot_path=self.settings.snapshot_path,
-                transforms=self.preprocess, only=self.hparam.only,
-                mode=self.hparam.mode, remake=self.hparam.dataset_remake
-            )
-            self.dataset_validation = ShapenetDataset(
-                dataset_path=self.settings.val_dataset_path, snapshot_path=self.settings.snapshot_path,
-                transforms=self.preprocess, only=self.hparam.only,
-                mode=self.hparam.mode, remake=self.hparam.dataset_remake
-            )
-            self.dataset_test = ShapenetDataset(
-                dataset_path=self.settings.test_dataset_path, snapshot_path=self.settings.snapshot_path,
-                transforms=self.preprocess, only=self.hparam.only,
-                mode=self.hparam.mode, remake=self.hparam.dataset_remake
-            )
-            self.loader_train = DataLoader(
-                dataset=self.dataset_train, batch_size=self.hparam.batch_size, shuffle=self.hparam.shuffle,
-                num_workers=self.hparam.num_workers, pin_memory=self.hparam.pin_memory,
-                worker_init_fn=self.worker_init_fn, generator=self.generator
-            )
-            self.loader_validation = DataLoader(
-                dataset=self.dataset_validation, batch_size=self.hparam.batch_size, shuffle=self.hparam.shuffle,
-                num_workers=self.hparam.num_workers, pin_memory=self.hparam.pin_memory,
-                worker_init_fn=self.worker_init_fn, generator=self.generator
-            )
-            self.loader_test = DataLoader(
-                dataset=self.dataset_test, batch_size=self.hparam.batch_size, shuffle=self.hparam.shuffle,
-                num_workers=self.hparam.num_workers, pin_memory=self.hparam.pin_memory,
-                worker_init_fn=self.worker_init_fn, generator=self.generator
-            )
+            self.dataset_train = self.shapenet_config(self.settings.train_dataset_path)
+            self.dataset_validation = self.shapenet_config(self.settings.val_dataset_path)
+            self.dataset_test = self.shapenet_config(self.settings.test_dataset_path)
+
+            self.loader_train = self.loader_config(self.dataset_train)
+            self.loader_validation = self.loader_config(self.dataset_validation)
+            self.loader_test = self.loader_config(self.dataset_test)
+
             self.pixel2point = Pixel2Point(initial_point=self.hparam.initial_point).to(self.device)
             input_size = [self.hparam.batch_size, 1] + self.hparam.resize
             logger.debug(
@@ -204,7 +200,6 @@ class MyProcess():
             for self.i_epoch in range(self.hparam.epoch):
                 self.train_loop()
                 self.validation_loop()
-                self.save_result('validation', sample=(20 if self.hparam.batch_size > 20 else self.hparam.batch_size))
                 # self.save_weight()
 
                 self.writer.add_hparams(
@@ -218,6 +213,7 @@ class MyProcess():
                         'num_workers': self.hparam.num_workers,
                         'pin_memory': self.hparam.pin_memory,
                         'initial_point': self.hparam.initial_point,
+                        'epoch': self.hparam.epoch,
                         'learning_rate': self.hparam.learning_rate,
                     },
                     {
@@ -240,7 +236,7 @@ if __name__ == '__main__':
     my_process = MyProcess()
     message = None
     try:
-        my_process.run()
+        my_process.train_validation()
     except Exception as e:
         message = f'🔴例外訊息：{e}'
         logger.debug(format_exc())

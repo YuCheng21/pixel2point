@@ -4,6 +4,9 @@ import torch
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+from datetime import datetime
+import matplotlib.pyplot as plt
+from math import ceil
 
 
 def env_init(reproducibility, seed):
@@ -26,20 +29,25 @@ def env_init(reproducibility, seed):
         # CUDA Results reproducibility (CUDA 11.7.1)
         os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
         os.environ['PYTHONHASHSEED'] = str(seed)
-        # DataLoader reproducibility
-        generator = torch.Generator()
-        generator.manual_seed(seed)
-        worker_init_fn = seed_worker
     else:
         torch.backends.cudnn.benchmark = True
         torch.backends.cudnn.deterministic = False
         torch.use_deterministic_algorithms(False)
-        generator = None
-        worker_init_fn = None
     
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = True
+
+
+
+def dataloader_init(loader_reproducility, seed):
+    if loader_reproducility is True:
+        generator = torch.Generator()
+        generator.manual_seed(seed)
+        worker_init_fn = seed_worker
+    else:
+        generator = None
+        worker_init_fn = None
 
     return worker_init_fn, generator
 
@@ -50,7 +58,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def show_3d(data, mode='browser', path='file.html'):
+def show_3d(data, mode='file', path=datetime.now().strftime('%Y-%m-%d_%H-%M-%S')):
     if torch.is_tensor(data):
         if data.requires_grad:
             data = data.detach()
@@ -85,7 +93,16 @@ def show_img(data, mode='browser', path='file.html'):
         img.write_html(path)
 
 
-def save_result(pred, output, gt, save_path, index):
+def show_result(pred, output, gt, save_path, index):
     show_img(pred, mode='file', path=save_path.joinpath(f'pred_{index}.html'))
     show_3d(output, mode='file', path=save_path.joinpath(f'outputs_{index}.html'))
     show_3d(gt, mode='file', path=save_path.joinpath(f'gt_{index}.html'))
+
+
+def save_multiple_images(images, path, columns=8):
+    rows = ceil(len(images) / columns)
+    fig = plt.figure(figsize=(2*columns, 2*rows))
+    for i in range(1, len(images) + 1):
+        fig.add_subplot(rows, columns, i)
+        plt.imshow(images[i-1])
+    plt.savefig(path)

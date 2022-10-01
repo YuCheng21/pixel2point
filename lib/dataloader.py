@@ -48,7 +48,7 @@ class ShapenetDataset(Dataset):
                 self.image = np.concatenate((self.image, image), 0)
         
         if self.length == 0:
-            raise Exception('no training data')
+            raise Exception('no data found')
         logger.debug(f'Dataset Type: {self.data_type}, Point Model: {len(self.source_points)}, Images: {self.length}')
 
     def check_final_h5(self, filename):

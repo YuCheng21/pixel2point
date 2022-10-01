@@ -1,4 +1,4 @@
-from pydantic import BaseSettings, BaseModel, validator
+from pydantic import BaseSettings, validator, BaseModel
 from typing import Optional
 from enum import Enum
 from pathlib import Path
@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     use_amp: list[bool] = [True]
     # Reproducibility
     reproducibility: list[bool] = [False]
+    loader_reproducibility: list[bool] = [False]
     seed: list[int] = [0]
     # Dataloader
     preprocess: list[list[str]] = [['grayscale', 'resize', 'totensor']]

@@ -74,6 +74,6 @@ class Pixel2Point(nn.Module):
         return torch.stack((x * radius + offset[0], y * radius + offset[1], z * radius + offset[2]), 1)
 
     def multiple_sphere(self):
-        sphere_1 = self.fibonacci_sphere(128, (0, 0, 0), 1)
-        sphere_2 = self.fibonacci_sphere(128, (2, 2, 2), 1)
+        sphere_1 = self.fibonacci_sphere(128, (0, -0.8, 0.3), 0.3)
+        sphere_2 = self.fibonacci_sphere(128, (0, 0.4, -0.2), 0.3)
         return torch.cat((sphere_1, sphere_2), 0)
