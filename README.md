@@ -18,7 +18,7 @@ conda env create -f ./environment.yml
 conda activate pixel2point
 ```
 
-The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 0.7.0, CUDA 11.7
+The code has been tested on Ubuntu 20.04, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 0.7.0, CUDA 11.7
 
 ## Dataset
 
@@ -27,7 +27,7 @@ The code has been tested on Debian 11, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 
 - Shapenet renderer (image.tar,
   30G): [Xharlie/ShapenetRender_more_variation](https://github.com/Xharlie/ShapenetRender_more_variation)
 
-> required to modify the dataset path in the `settings.py`
+> required to modify the dataset path in the `./lib/settings.py`
 
 ## Training
 
@@ -41,7 +41,7 @@ python main.py
 python test.py
 ```
 
-> required to modify the model path in `settings.py`
+> required to modify the model path in `./lib/settings.py`
 
 ## Notes
 
