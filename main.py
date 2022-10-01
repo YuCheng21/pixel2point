@@ -6,6 +6,7 @@ from tqdm import tqdm
 from itertools import product
 from pydantic import create_model
 from json import dumps
+from traceback import format_exc
 
 from lib.writer import summary_writer, profile, mesh_dict, d42rgb
 from lib.dataloader import ShapenetDataset
@@ -14,6 +15,7 @@ from lib.model import Pixel2Point
 from lib.settings import Settings
 from lib.utils import env_init
 from lib.loss import chamfer_distance
+from lib.notification import send_telegram
 
 
 class MyProcess():
@@ -24,6 +26,7 @@ class MyProcess():
         self.parameters = self.settings.dict(exclude={
             'snapshot_path', 'output_path', 'model_path',
             'train_dataset_path', 'val_dataset_path', 'test_dataset_path',
+            'telegram_token', 'telegram_chat_id'
         })
 
     def train_loop(self):
@@ -95,7 +98,7 @@ class MyProcess():
         if 'resize' in self.hparam.preprocess:
             preprocess += [transforms.Resize(self.hparam.resize)]
         if 'totensor' in self.hparam.preprocess:
-            preprocess += [transforms.ToTensor]
+            preprocess += [transforms.ToTensor()]
         return transforms.Compose(preprocess)
 
     def save_model(self, key, data):
@@ -138,10 +141,10 @@ class MyProcess():
     def save_mesh(self, tag, coordinate, global_step):
         self.writer.add_mesh(tag, coordinate, config_dict=mesh_dict(coordinate), global_step=global_step)
 
-    def save_result(self, data_type):
-        self.writer.add_images(f'Input/{data_type}', d42rgb(self.pred), self.global_step)
-        self.save_mesh(f'Output/{data_type}', self.output, self.global_step)
-        self.save_mesh(f'GT/{data_type}', self.gt, self.global_step)
+    def save_result(self, data_type, sample=100):
+        self.writer.add_images(f'Input/{data_type}', d42rgb(self.pred[:sample]), self.global_step)
+        self.save_mesh(f'Output/{data_type}', self.output[:sample], self.global_step)
+        self.save_mesh(f'GT/{data_type}', self.gt[:sample], self.global_step)
 
     def run(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
@@ -201,14 +204,13 @@ class MyProcess():
             for self.i_epoch in range(self.hparam.epoch):
                 self.train_loop()
                 self.validation_loop()
-                self.save_result('validation')
+                self.save_result('validation', sample=(20 if self.hparam.batch_size > 20 else self.hparam.batch_size))
                 # self.save_weight()
 
                 self.writer.add_hparams(
                     {
                         'use_amp': self.hparam.use_amp,
                         'reproducibility': self.hparam.reproducibility,
-                        'only': self.hparam.only,
                         'mode': self.hparam.mode,
                         'dataset_remake': self.hparam.dataset_remake,
                         'batch_size': self.hparam.batch_size,
@@ -236,4 +238,13 @@ if __name__ == '__main__':
     file_logger()
 
     my_process = MyProcess()
-    my_process.run()
+    message = None
+    try:
+        my_process.run()
+    except Exception as e:
+        message = f'🔴例外訊息：{e}'
+        logger.debug(format_exc())
+    else:
+        message = f'🟢訓練結束'
+    finally:
+        send_telegram(my_process.settings.telegram_token, my_process.settings.telegram_chat_id, message)

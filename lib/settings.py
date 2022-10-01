@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # Testing
     test_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/test_files.txt"
     model_path: Path = r"/root/pixel2point/model/2022-09-15_11-32-03_param.pt"
+    # Telegram
+    telegram_token: str = 'YOUR TELEGRAM BOT TOKEN'
+    telegram_chat_id: str = 'YOUR CHAT ID'
+    discord_webhook_url: str = "YOUR WEBHOOK URL"
 
     @validator('only')
     @classmethod
