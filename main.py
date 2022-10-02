@@ -13,7 +13,7 @@ from lib.dataloader import ShapenetDataset
 from lib.logger import logger, console_logger, file_logger
 from lib.model import Pixel2Point
 from lib.settings import Settings
-from lib.utils import env_init, dataloader_init
+from lib.utils import env_init, dataloader_init, show_result
 from lib.loss import chamfer_distance
 from lib.notification import send_telegram
 
@@ -53,11 +53,17 @@ class MyProcess():
             self.prof.step()
 
             self.loss_train += loss.item()
+
             train_bar.set_description(f'Epoch [{self.i_epoch + 1}/{self.hparam.epoch}]')
             train_bar.set_postfix(loss=loss.item())
 
             if i_batch + 1 == len(self.loader_train) - 1:
                 self.save_result(f'Training_{i_batch}', sample=100)
+                plotly_path = self.settings.output_path.joinpath('plotly')
+                plotly_path.mkdir(parents=True, exist_ok=True)
+                watch_index = 3
+                show_result(self.pred[watch_index], self.output[watch_index], self.gt[watch_index],
+                            plotly_path, f'{watch_index}_train')
         self.prof.stop()
 
     def validation_loop(self):
@@ -74,11 +80,17 @@ class MyProcess():
                 loss, _ = self.loss_function(self.output, self.gt)
 
                 self.loss_val += loss.item()
+
                 val_bar.set_description(f'Validating')
                 val_bar.set_postfix(loss=loss.item())
 
                 if i_batch + 1 == len(self.loader_validation) - 1:
                     self.save_result(f'validation_{i_batch}', sample=100)
+                    plotly_path = self.settings.output_path.joinpath('plotly')
+                    plotly_path.mkdir(parents=True, exist_ok=True)
+                    watch_index = 3
+                    show_result(self.pred[watch_index], self.output[watch_index], self.gt[watch_index],
+                                plotly_path, f'{watch_index}_validation')
 
     def transform_config(self):
         preprocess = []
@@ -146,8 +158,8 @@ class MyProcess():
 
     def save_result(self, data_type, sample=None):
         self.writer.add_images(f'Input/{data_type}', d42rgb(self.pred[:sample]), self.global_step)
-        self.save_mesh(f'Output/{data_type}', self.output[:sample,:,:3], self.global_step)
-        self.save_mesh(f'GT/{data_type}', self.gt[:sample,:,:3], self.global_step)
+        self.save_mesh(f'Output_{data_type}', self.output[:sample, :, :3], self.global_step)
+        self.save_mesh(f'GT_{data_type}', self.gt[:sample, :, :3], self.global_step)
 
     def train_validation(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
@@ -184,7 +196,7 @@ class MyProcess():
             for self.i_epoch in range(self.hparam.epoch):
                 self.train_loop()
                 self.validation_loop()
-                # self.save_weight()
+                self.save_weight()
 
                 self.writer.add_hparams(
                     {
