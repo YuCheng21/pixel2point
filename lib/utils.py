@@ -58,20 +58,23 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def show_3d(data, mode='file', path=datetime.now().strftime('%Y-%m-%d_%H-%M-%S')):
+def show_3d(data, mode='file', path=f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.html"):
     if torch.is_tensor(data):
         if data.requires_grad:
             data = data.detach()
         if not data.device == 'cpu':
             data = data.to('cpu')
         data = data.numpy()
+    marker = {'size': 2, 'opacity': 0.8, }
+    if data.shape[1] == 4:
+        marker['color'] = data[:, 3]
     fig = go.Figure(
         data=[go.Scatter3d(
             x=data[:, 0],
             y=data[:, 1],
             z=data[:, 2],
             mode='markers',
-            marker={'size': 2, 'opacity': 0.8, }
+            marker=marker
         )],
         layout=go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0}, scene=dict(aspectmode='data'))
     )

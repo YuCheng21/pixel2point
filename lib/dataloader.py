@@ -5,6 +5,8 @@ import numpy as np
 import json
 import h5py
 from PIL import Image
+from kmeans_pytorch import kmeans
+import torch
 
 from lib.logger import logger
 
@@ -28,6 +30,7 @@ class ShapenetDataset(Dataset):
                 source_name, source_file, source_points = self.read_dataset([value])
                 image_path, gt_points, length = self.convert2realpath(source_file)
                 image = self.open_image(image_path)
+                # source_points = self.points_classification(source_points)
                 self.save_final_h5(value, source_name, source_file, source_points, image_path, gt_points, image)
 
             if key == 0:
@@ -114,6 +117,13 @@ class ShapenetDataset(Dataset):
             all_file = np.concatenate((all_file, file), 0)
             all_gt_points = np.concatenate((all_gt_points, h5_data), 0)
         return all_name, all_file, all_gt_points
+    
+    def points_classification(self, source_points):
+        cluster = torch.empty([0, 2048])
+        for key, value in enumerate(source_points):
+            cluster_ids_x, _ = kmeans(X=torch.from_numpy(value), num_clusters=3, distance='euclidean', tol=1e-4, device='cuda')
+            cluster = torch.cat((cluster, cluster_ids_x.view(1, -1)), 0)
+        return torch.cat((torch.from_numpy(source_points), cluster.unsqueeze(2)), 2)
 
     def convert2realpath(self, source_file):
         images, points = np.empty([0]), np.empty([0], dtype=int)

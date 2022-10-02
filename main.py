@@ -55,6 +55,9 @@ class MyProcess():
             self.loss_train += loss.item()
             train_bar.set_description(f'Epoch [{self.i_epoch + 1}/{self.hparam.epoch}]')
             train_bar.set_postfix(loss=loss.item())
+
+            if i_batch + 1 == len(self.loader_train) - 1:
+                self.save_result(f'Training_{i_batch}', sample=100)
         self.prof.stop()
 
     def validation_loop(self):
@@ -74,25 +77,8 @@ class MyProcess():
                 val_bar.set_description(f'Validating')
                 val_bar.set_postfix(loss=loss.item())
 
-                if i_batch == 0:
+                if i_batch + 1 == len(self.loader_validation) - 1:
                     self.save_result(f'validation_{i_batch}', sample=100)
-
-    def test_loop(self):
-        self.loss_test = 0
-        self.pixel2point.train(mode=False)
-        with torch.no_grad():
-            test_bar = tqdm(self.loader_test, unit='batch', leave=True, colour='#9E7EDA')
-            for i_batch, (self.pred, self.gt, index) in enumerate(test_bar):
-                self.pred = self.pred.to(self.device)
-                self.gt = self.gt.to(self.device)
-
-                self.output = self.pixel2point.forward(self.pred)
-                self.output = self.output.type_as(self.gt).view((self.gt.shape[0], -1, 3))
-                loss, _ = self.loss_function(self.output, self.gt)
-
-                self.loss_test += loss.item()
-                test_bar.set_description(f'Testing')
-                test_bar.set_postfix(loss=loss.item())
 
     def transform_config(self):
         preprocess = []
@@ -160,8 +146,8 @@ class MyProcess():
 
     def save_result(self, data_type, sample=None):
         self.writer.add_images(f'Input/{data_type}', d42rgb(self.pred[:sample]), self.global_step)
-        self.save_mesh(f'Output/{data_type}', self.output[:sample], self.global_step)
-        self.save_mesh(f'GT/{data_type}', self.gt[:sample], self.global_step)
+        self.save_mesh(f'Output/{data_type}', self.output[:sample,:,:3], self.global_step)
+        self.save_mesh(f'GT/{data_type}', self.gt[:sample,:,:3], self.global_step)
 
     def train_validation(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
@@ -179,11 +165,9 @@ class MyProcess():
             self.preprocess = self.transform_config()
             self.dataset_train = self.shapenet_config(self.settings.train_dataset_path)
             self.dataset_validation = self.shapenet_config(self.settings.val_dataset_path)
-            self.dataset_test = self.shapenet_config(self.settings.test_dataset_path)
 
             self.loader_train = self.loader_config(self.dataset_train)
             self.loader_validation = self.loader_config(self.dataset_validation)
-            self.loader_test = self.loader_config(self.dataset_test)
 
             self.pixel2point = Pixel2Point(initial_point=self.hparam.initial_point).to(self.device)
             input_size = [self.hparam.batch_size, 1] + self.hparam.resize
@@ -218,7 +202,7 @@ class MyProcess():
                     },
                     {
                         'Loss/train': self.loss_train / len(self.loader_train),
-                        'Loss/validation': self.loss_val / len(self.loader_test)
+                        'Loss/validation': self.loss_val / len(self.loader_validation)
                     },
                     './',
                     global_step=self.global_step
