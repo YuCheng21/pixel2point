@@ -63,7 +63,7 @@ class MyProcess():
                 plotly_path.mkdir(parents=True, exist_ok=True)
                 watch_index = 3
                 show_result(self.pred[watch_index], self.output[watch_index], self.gt[watch_index],
-                            plotly_path, f'{watch_index}_train')
+                            plotly_path, f'{self.global_step}_{watch_index}_train')
         self.prof.stop()
 
     def validation_loop(self):
@@ -90,7 +90,7 @@ class MyProcess():
                     plotly_path.mkdir(parents=True, exist_ok=True)
                     watch_index = 3
                     show_result(self.pred[watch_index], self.output[watch_index], self.gt[watch_index],
-                                plotly_path, f'{watch_index}_validation')
+                                plotly_path, f'{self.global_step}_{watch_index}_validation')
 
     def transform_config(self):
         preprocess = []
