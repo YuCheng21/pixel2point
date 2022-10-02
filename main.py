@@ -59,11 +59,9 @@ class MyProcess():
 
             if i_batch + 1 == len(self.loader_train) - 1:
                 self.save_result(f'Training_{i_batch}', sample=100)
-                plotly_path = self.settings.output_path.joinpath('plotly')
-                plotly_path.mkdir(parents=True, exist_ok=True)
-                watch_index = 3
+                watch_index = 78
                 show_result(self.pred[watch_index], self.output[watch_index], self.gt[watch_index],
-                            plotly_path, f'{self.global_step}_{watch_index}_train')
+                            self.plotly_path, f'{self.global_step}_{watch_index}_train')
         self.prof.stop()
 
     def validation_loop(self):
@@ -86,11 +84,9 @@ class MyProcess():
 
                 if i_batch + 1 == len(self.loader_validation) - 1:
                     self.save_result(f'validation_{i_batch}', sample=100)
-                    plotly_path = self.settings.output_path.joinpath('plotly')
-                    plotly_path.mkdir(parents=True, exist_ok=True)
                     watch_index = 3
                     show_result(self.pred[watch_index], self.output[watch_index], self.gt[watch_index],
-                                plotly_path, f'{self.global_step}_{watch_index}_validation')
+                                self.plotly_path, f'{self.global_step}_{watch_index}_validation')
 
     def transform_config(self):
         preprocess = []
@@ -192,6 +188,10 @@ class MyProcess():
             self.loss_function = chamfer_distance
             self.optimizer = torch.optim.Adam(self.pixel2point.parameters(), lr=self.hparam.learning_rate)
             self.scaler = torch.cuda.amp.GradScaler(enabled=self.hparam.use_amp)
+
+
+            self.plotly_path = self.settings.output_path.joinpath(f'{key}_plotly')
+            self.plotly_path.mkdir(parents=True, exist_ok=True)
 
             for self.i_epoch in range(self.hparam.epoch):
                 self.train_loop()
