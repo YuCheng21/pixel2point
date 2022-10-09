@@ -58,9 +58,7 @@ class EmdFunction(Function):
 
         ctx.save_for_backward(xyz1, xyz2, assignment)
 
-        loss = torch.sqrt(dist).mean()
-        # return dist, assignment
-        return loss, assignment
+        return dist, assignment
 
     @staticmethod
     def backward(ctx, graddist, gradidx):
@@ -79,7 +77,9 @@ class EmdModule(nn.Module):
         self.train_param(True)
 
     def forward(self, input1, input2):
-        return EmdFunction.apply(input1, input2, self.eps, self.iters)
+        dist, assignment = EmdFunction.apply(input1, input2, self.eps, self.iters)
+        loss = torch.sqrt(dist).mean()
+        return loss, None
     
     def train_param(self, mode: bool = True):
         if mode is True:

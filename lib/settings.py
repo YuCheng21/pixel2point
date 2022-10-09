@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # Environment
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
     current_time: str = str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-    output_path: Path = f"./output/{current_time}"
+    output_path: Path = f"./runs/{current_time}"
     device: list[str] = ["cuda"]
     use_amp: list[bool] = [True]
     # Reproducibility

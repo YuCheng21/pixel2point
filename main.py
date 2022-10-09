@@ -191,7 +191,7 @@ class MyProcess():
 
     def train_validation(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
-            self.writer = summary_writer(logdir=f'./runs/{self.settings.current_time}/{key}_param')
+            self.writer = summary_writer(logdir=f'./runs/{self.settings.current_time}/{key}_tb')
             self.prof = profile(dir_name=self.writer.logdir)
 
             hparam_dict = dict(zip(list(self.parameters.keys()), data))
