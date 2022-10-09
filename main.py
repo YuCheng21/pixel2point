@@ -13,8 +13,8 @@ from lib.dataloader import ShapenetDataset
 from lib.logger import logger, console_logger, file_logger
 from lib.model import Pixel2Point
 from lib.settings import Settings
-from lib.utils import env_init, dataloader_init, show_result
-from lib.loss import chamfer_distance
+from lib.utils import env_init, dataloader_init, show_result, show_3d
+from lib.loss import chamfer_distance, emdModule
 from lib.notification import send_telegram
 
 
@@ -32,6 +32,7 @@ class MyProcess():
     def train_loop(self):
         self.loss_train = 0
         self.pixel2point.train(mode=True)
+        self.loss_function(mode=True)
         self.prof.start()
         train_bar = tqdm(self.loader_train, unit='batch', leave=True, colour='#B8DA7E')
         for i_batch, (self.pred, self.gt, index) in enumerate(train_bar):
@@ -67,6 +68,7 @@ class MyProcess():
     def validation_loop(self):
         self.loss_val = 0
         self.pixel2point.train(mode=False)
+        self.loss_function(mode=False)
         with torch.no_grad():
             val_bar = tqdm(self.loader_validation, unit='batch', leave=True, colour='#7EA9DA')
             for i_batch, (self.pred, self.gt, index) in enumerate(val_bar):
@@ -97,6 +99,12 @@ class MyProcess():
         if 'totensor' in self.hparam.preprocess:
             preprocess += [transforms.ToTensor()]
         return transforms.Compose(preprocess)
+
+    def loss_config(self):
+        if self.hparam.loss_function == 'CD':
+            return chamfer_distance
+        elif self.hparam.loss_function == 'EMD':
+            return emdModule()
 
     def shapenet_config(self, dataset_path):
         return ShapenetDataset(
@@ -149,6 +157,30 @@ class MyProcess():
         self.writer.add_histogram('fc4/weight', self.pixel2point.fc4.weight, global_step=self.global_step)
         self.writer.add_histogram('fc4/bais', self.pixel2point.fc4.bias, global_step=self.global_step)
 
+    def save_hparam(self):
+        self.writer.add_hparams(
+            {
+                'use_amp': self.hparam.use_amp,
+                'reproducibility': self.hparam.reproducibility,
+                'mode': self.hparam.mode,
+                'dataset_remake': self.hparam.dataset_remake,
+                'batch_size': self.hparam.batch_size,
+                'shuffle': self.hparam.shuffle,
+                'num_workers': self.hparam.num_workers,
+                'pin_memory': self.hparam.pin_memory,
+                'initial_point': self.hparam.initial_point,
+                'loss_function': self.hparam.loss_function,
+                'epoch': self.hparam.epoch,
+                'learning_rate': self.hparam.learning_rate,
+            },
+            {
+                'Loss/train': self.loss_train / len(self.loader_train),
+                'Loss/validation': self.loss_val / len(self.loader_validation)
+            },
+            './',
+            global_step=self.global_step
+        )
+
     def save_mesh(self, tag, coordinate, global_step):
         self.writer.add_mesh(tag, coordinate, config_dict=mesh_dict(coordinate), global_step=global_step)
 
@@ -185,40 +217,20 @@ class MyProcess():
             self.writer.add_graph(self.pixel2point, torch.rand(input_size).to(self.device))
             self.save_mesh('Initial_Point', self.pixel2point.initial_point.unsqueeze(0), global_step=0)
 
-            self.loss_function = chamfer_distance
+            self.loss_function = self.loss_config()
             self.optimizer = torch.optim.Adam(self.pixel2point.parameters(), lr=self.hparam.learning_rate)
             self.scaler = torch.cuda.amp.GradScaler(enabled=self.hparam.use_amp)
 
-
             self.plotly_path = self.settings.output_path.joinpath(f'{key}_plotly')
             self.plotly_path.mkdir(parents=True, exist_ok=True)
+            show_3d(self.pixel2point.initial_point, path=self.plotly_path.joinpath('initial_point.html'))
 
             for self.i_epoch in range(self.hparam.epoch):
                 self.train_loop()
                 self.validation_loop()
                 self.save_weight()
+                self.save_hparam()
 
-                self.writer.add_hparams(
-                    {
-                        'use_amp': self.hparam.use_amp,
-                        'reproducibility': self.hparam.reproducibility,
-                        'mode': self.hparam.mode,
-                        'dataset_remake': self.hparam.dataset_remake,
-                        'batch_size': self.hparam.batch_size,
-                        'shuffle': self.hparam.shuffle,
-                        'num_workers': self.hparam.num_workers,
-                        'pin_memory': self.hparam.pin_memory,
-                        'initial_point': self.hparam.initial_point,
-                        'epoch': self.hparam.epoch,
-                        'learning_rate': self.hparam.learning_rate,
-                    },
-                    {
-                        'Loss/train': self.loss_train / len(self.loader_train),
-                        'Loss/validation': self.loss_val / len(self.loader_validation)
-                    },
-                    './',
-                    global_step=self.global_step
-                )
             if self.hparam.save_model is True:
                 self.save_model(key, hparam_dict)
 

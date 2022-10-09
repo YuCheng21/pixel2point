@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     save_result: list[bool] = [True]
     # Model
     initial_point: list[int] = [0]
+    # Loss Function
+    loss_function: list[str] = ["CD"]
     # Training
     train_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/train_files.txt"
     val_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/val_files.txt"
@@ -43,7 +45,7 @@ class Settings(BaseSettings):
     # Testing
     test_dataset_path: Path = r"/root/pixel2point/dataset/shapenetcorev2_hdf5_2048/test_files.txt"
     model_path: Path = r"/root/pixel2point/model/2022-09-15_11-32-03_param.pt"
-    # Telegram
+    # Notification
     telegram_token: str = 'YOUR TELEGRAM BOT TOKEN'
     telegram_chat_id: str = 'YOUR CHAT ID'
     discord_webhook_url: str = "YOUR WEBHOOK URL"
