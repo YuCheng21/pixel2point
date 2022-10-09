@@ -64,18 +64,14 @@ class emdModule(nn.Module):
         super(emdModule, self).__init__()
         self.train_param(True)
 
-    def forward(self, input1, input2, eps=None, iters=None):
-        if eps is None:
-            eps = self.eps
-        if iters is None:
-            iters = self.iters
-        return emdFunction.apply(input1, input2, eps, iters)
+    def forward(self, input1, input2):
+        return emdFunction.apply(input1, input2, self.eps, self.iters)
     
     def train_param(self, mode: bool = True):
         if mode is True:
             self.eps = 0.05
             self.iters = 50
         else:
-            self.eps = 0.002
-            self.iters = 10000
+            self.eps = 0.05  # 0.002
+            self.iters = 50  # 10000
         
