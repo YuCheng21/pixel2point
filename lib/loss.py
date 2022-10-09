@@ -1,19 +1,33 @@
+import emd
 import torch
 from pytorch3d.loss import chamfer_distance as pt3d_cd
-import torch
 from torch import nn
 from torch.autograd import Function
-import emd
 
 
-def chamfer_distance(p1, p2):
-    if not torch.are_deterministic_algorithms_enabled():
+class ChamferDistance():
+    def __init__(self) -> None:
+        if not torch.are_deterministic_algorithms_enabled():
+            self.loss_function = self.non_deterministic
+        else:
+            self.loss_function = self.deterministic
+    
+    def forward(self, p1, p2):
+        return self.loss_function(p1, p2)
+
+    def deterministic(self, p1, p2):
+        s1 = torch.sum(torch.min(torch.cdist(p1, p2, p=2)**2, 2).values, 1)
+        s2 = torch.sum(torch.min(torch.cdist(p2, p1, p=2)**2, 2).values, 1)
+        return (torch.sum(s1) + torch.sum(s2)) / (p1.shape[-2] * s1.shape[0]), None
+
+    def non_deterministic(self, p1, p2):
         return pt3d_cd(p1, p2)
-    s1 = torch.sum(torch.min(torch.cdist(p1, p2, p=2)**2, 2).values, 1)
-    s2 = torch.sum(torch.min(torch.cdist(p2, p1, p=2)**2, 2).values, 1)
-    return (torch.sum(s1) + torch.sum(s2)) / (p1.shape[-2] * s1.shape[0]), None
 
-class emdFunction(Function):
+    def train_param(self, mode: bool = True):
+        pass
+
+
+class EmdFunction(Function):
     @staticmethod
     def forward(ctx, xyz1, xyz2, eps, iters):
 
@@ -59,13 +73,13 @@ class emdFunction(Function):
         emd.backward(xyz1, xyz2, gradxyz1, graddist, assignment)
         return gradxyz1, gradxyz2, None, None
 
-class emdModule(nn.Module):
+class EmdModule(nn.Module):
     def __init__(self):
-        super(emdModule, self).__init__()
+        super(EmdModule, self).__init__()
         self.train_param(True)
 
     def forward(self, input1, input2):
-        return emdFunction.apply(input1, input2, self.eps, self.iters)
+        return EmdFunction.apply(input1, input2, self.eps, self.iters)
     
     def train_param(self, mode: bool = True):
         if mode is True:

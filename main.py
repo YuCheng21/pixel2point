@@ -14,7 +14,7 @@ from lib.logger import logger, console_logger, file_logger
 from lib.model import Pixel2Point
 from lib.settings import Settings
 from lib.utils import env_init, dataloader_init, show_result, show_3d
-from lib.loss import chamfer_distance, emdModule
+from lib.loss import ChamferDistance, EmdModule
 from lib.notification import send_telegram
 
 
@@ -43,7 +43,7 @@ class MyProcess():
             with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=self.hparam.use_amp):
                 self.output = self.pixel2point.forward(self.pred)
                 self.output = self.output.type_as(self.gt).view(self.gt.shape[0], -1, 3)
-                loss, _ = self.loss_function(self.output, self.gt)
+                loss, _ = self.loss_function.forward(self.output, self.gt)
 
             self.optimizer.zero_grad()
             # torch.autograd.backward(loss)
@@ -77,7 +77,7 @@ class MyProcess():
 
                 self.output = self.pixel2point.forward(self.pred)
                 self.output = self.output.type_as(self.gt).view(self.gt.shape[0], -1, 3)
-                loss, _ = self.loss_function(self.output, self.gt)
+                loss, _ = self.loss_function.forward(self.output, self.gt)
 
                 self.loss_val += loss.item()
 
@@ -102,9 +102,9 @@ class MyProcess():
 
     def loss_config(self):
         if self.hparam.loss_function == 'CD':
-            return chamfer_distance
+            return ChamferDistance()
         elif self.hparam.loss_function == 'EMD':
-            return emdModule()
+            return EmdModule()
 
     def shapenet_config(self, dataset_path):
         return ShapenetDataset(
