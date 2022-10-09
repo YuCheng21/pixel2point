@@ -7,8 +7,8 @@ d42rgb = transforms.Lambda(lambda x: x.repeat(1, 3, 1, 1) if x.size(1) == 1 else
 d32rgb = transforms.Lambda(lambda x: x.repeat(3, 1, 1) if x.size(0) == 1 else x)
 
 
-def summary_writer(comment='main'):
-    return SummaryWriter(comment=f'-{comment}')
+def summary_writer(logdir=None):
+    return SummaryWriter(logdir=logdir)
 
 
 def profile(dir_name=None):

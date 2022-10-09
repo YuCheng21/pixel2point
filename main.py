@@ -24,7 +24,7 @@ class MyProcess():
         self.device = self.settings.device[0]
         logger.debug(f"Using {self.device} device")
         self.parameters = self.settings.dict(exclude={
-            'snapshot_path', 'output_path', 'model_path',
+            'snapshot_path', 'output_path', 'model_path', 'current_time',
             'train_dataset_path', 'val_dataset_path', 'test_dataset_path',
             'telegram_token', 'telegram_chat_id', 'discord_webhook_url'
         })
@@ -191,7 +191,7 @@ class MyProcess():
 
     def train_validation(self):
         for key, data in enumerate(product(*[v for v in self.parameters.values()])):
-            self.writer = summary_writer(comment='main')
+            self.writer = summary_writer(logdir=f'./runs/{self.settings.current_time}/{key}_param')
             self.prof = profile(dir_name=self.writer.logdir)
 
             hparam_dict = dict(zip(list(self.parameters.keys()), data))

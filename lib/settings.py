@@ -13,7 +13,8 @@ class ModeEnum(str, Enum):
 class Settings(BaseSettings):
     # Environment
     snapshot_path: Path = r"/root/pixel2point/dataset/image"
-    output_path: Path = f"./output/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    current_time: str = str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    output_path: Path = f"./output/{current_time}"
     device: list[str] = ["cuda"]
     use_amp: list[bool] = [True]
     # Reproducibility
