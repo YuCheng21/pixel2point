@@ -20,6 +20,10 @@ conda activate pixel2point
 
 The code has been tested on Ubuntu 20.04, Python 3.9.13, Pytorch 1.12.1, Pytorch3D 0.7.0, CUDA 11.7
 
+### EMD Loss Function
+
+The Earth Mover's Distance of point clouds is from: [Colin97/MSN-Point-Cloud-Completion: Morphing and Sampling Network for Dense Point Cloud Completion (AAAI2020)](https://github.com/Colin97/MSN-Point-Cloud-Completion/tree/master/emd)
+
 ## Dataset
 
 - Shapenet Point cloud (shapenetcorev2_hdf5_2048.zip,

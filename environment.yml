@@ -185,12 +185,14 @@ dependencies:
   - pip:
     - astunparse==1.6.3
     - discord-webhook==0.17.0
+    - emd==0.0.0
     - flatbuffers==2.0.7
     - gast==0.4.0
     - google-pasta==0.2.0
     - gviz-api==1.10.0
     - keras==2.10.0
     - keras-preprocessing==1.1.2
+    - kmeans-pytorch==0.3
     - libclang==14.0.6
     - opt-einsum==3.3.0
     - tensorboard-plugin-profile==2.8.0
