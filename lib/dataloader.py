@@ -30,7 +30,10 @@ class ShapenetDataset(Dataset):
                 source_name, source_file, source_points = self.read_dataset([value])
                 image_path, gt_points, length = self.convert2realpath(source_file)
                 image = self.open_image(image_path)
+
+                source_points = self.points_normalization(source_points)
                 # source_points = self.points_classification(source_points)
+                
                 self.save_final_h5(value, source_name, source_file, source_points, image_path, gt_points, image)
 
             if key == 0:
@@ -117,6 +120,14 @@ class ShapenetDataset(Dataset):
             all_file = np.concatenate((all_file, file), 0)
             all_gt_points = np.concatenate((all_gt_points, h5_data), 0)
         return all_name, all_file, all_gt_points
+    
+    def points_normalization(self, source_points):
+        size = source_points.shape[0]
+        n_points = torch.from_numpy(source_points).view(size, -1)
+        n_points = n_points - n_points.min(1, keepdim=True)[0]
+        n_points = n_points / n_points.max(1, keepdim=True)[0]
+        n_points = n_points.view(size, -1, 3)
+        return n_points.numpy()
     
     def points_classification(self, source_points):
         cluster = torch.empty([0, 2048])
