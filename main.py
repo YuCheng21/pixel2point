@@ -32,7 +32,7 @@ class MyProcess():
     def train_loop(self):
         self.loss_train = 0
         self.pixel2point.train(mode=True)
-        self.loss_function(mode=True)
+        self.loss_function.train_param(mode=True)
         self.prof.start()
         train_bar = tqdm(self.loader_train, unit='batch', leave=True, colour='#B8DA7E')
         for i_batch, (self.pred, self.gt, index) in enumerate(train_bar):
@@ -68,7 +68,7 @@ class MyProcess():
     def validation_loop(self):
         self.loss_val = 0
         self.pixel2point.train(mode=False)
-        self.loss_function(mode=False)
+        self.loss_function.train_param(mode=False)
         with torch.no_grad():
             val_bar = tqdm(self.loader_validation, unit='batch', leave=True, colour='#7EA9DA')
             for i_batch, (self.pred, self.gt, index) in enumerate(val_bar):
