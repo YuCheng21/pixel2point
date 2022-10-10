@@ -44,6 +44,7 @@ if __name__ == '__main__':
 
     loss_test = 0
     pixel2point.train(mode=False)
+    loss_function.train_param(mode=False)
     with torch.no_grad():
         test_bar = tqdm(test_loader, unit='batch', leave=True, colour='#9E7EDA')
         for i_batch, (pred, gt, index) in enumerate(test_bar):
