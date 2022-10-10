@@ -83,9 +83,9 @@ class EmdModule(nn.Module):
     
     def train_param(self, mode: bool = True):
         if mode is True:
-            self.eps = 0.05
-            self.iters = 50
+            self.eps = 0.002  # 0.05
+            self.iters = 500  # 50
         else:
-            self.eps = 0.05  # 0.002
-            self.iters = 50  # 10000
+            self.eps = 0.002  # 0.002
+            self.iters = 500  # 10000
         
