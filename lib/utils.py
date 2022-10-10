@@ -104,8 +104,12 @@ def show_result(pred, output, gt, save_path, index):
 
 def save_multiple_images(images, path, columns=8):
     rows = ceil(len(images) / columns)
-    fig = plt.figure(figsize=(2*columns, 2*rows))
-    for i in range(1, len(images) + 1):
-        fig.add_subplot(rows, columns, i)
-        plt.imshow(images[i-1])
+    fig, ax = plt.subplots(nrows=rows, ncols=columns, figsize=(2*columns, 3*rows))
+    for i, axi in enumerate(ax.flat):
+        try:
+            target = images[i-1]
+        except:
+            break
+        axi.imshow(target)
+        axi.set_title(f'Index:{i}')
     plt.savefig(path)
