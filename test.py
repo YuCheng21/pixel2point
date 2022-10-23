@@ -42,6 +42,10 @@ if __name__ == '__main__':
     pixel2point.load_state_dict(checkpoint['model_state_dict'])
     loss_function = checkpoint['criterion']
 
+    plotly_path = settings.output_path.joinpath('plotly')
+    plotly_path.mkdir(parents=True, exist_ok=True)
+    show_3d(pixel2point.initial_point, path=plotly_path.joinpath('initial_point.html'))
+
     loss_test = 0
     pixel2point.train(mode=False)
     loss_function.train_param(mode=False)
@@ -53,18 +57,15 @@ if __name__ == '__main__':
 
             output = pixel2point.forward(pred)
             output = output.type_as(gt).view((gt.shape[0], -1, 3))
-            loss, _ = loss_function(output, gt)
+            loss, _ = loss_function.forward(output, gt)
 
             loss_test += loss.item()
             test_bar.set_description(f'Testing')
             test_bar.set_postfix(loss=loss.item())
 
             if i_batch == 5:
-                plotly_path = settings.output_path.joinpath('plotly')
-                plotly_path.mkdir(parents=True, exist_ok=True)
-                save_multiple_images(pred[:100].permute(0, 2, 3, 1).detach().cpu(), plotly_path.joinpath('imgs.png'))
-                show_3d(pixel2point.initial_point, path=plotly_path.joinpath('initial_point.html'))
-                watch_index = 82
+                save_multiple_images(pred[:None].permute(0, 2, 3, 1).detach().cpu(), plotly_path.joinpath('imgs.png'))
+                watch_index = 48
                 show_result(pred[watch_index], output[watch_index], gt[watch_index], plotly_path, watch_index)
 
     logger.debug(f'Testing Loss: {loss_test / len(test_loader)}')
