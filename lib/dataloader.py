@@ -161,7 +161,7 @@ class ShapenetDataset(Dataset):
         open_bar = tqdm(image_path, unit='file', leave=True, colour='#DADA7E')
         for key, value in enumerate(open_bar):
             image += [Image.open(value).copy()]
-            image[-1].convert("RGB")
+            image[-1] = image[-1].convert("RGB")
             if self.transforms is not None:
                 image[-1] = self.transforms(image[-1]).numpy()
             open_bar.set_description(f'Open Image (File) [{key + 1}/{len(image_path)}]')
