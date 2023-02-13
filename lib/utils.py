@@ -107,7 +107,7 @@ def save_multiple_images(images, path, columns=8):
     fig, ax = plt.subplots(nrows=rows, ncols=columns, figsize=(2*columns, 3*rows))
     for i, axi in enumerate(ax.flat):
         try:
-            target = images[i-1]
+            target = images[i]
         except:
             break
         axi.imshow(target)
